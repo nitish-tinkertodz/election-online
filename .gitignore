@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/.npm-cache
 /.pnp
 .pnp.js
 
@@ -14,10 +15,13 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+*.tmp
+*.swp
 
 # debug
 npm-debug.log*
@@ -27,9 +31,14 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.dev.vars
+.dev.vars.*
 
 # vercel
 .vercel
+
+# cloudflare
+.wrangler/
 
 # typescript
 *.tsbuildinfo

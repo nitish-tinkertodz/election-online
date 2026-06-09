@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8f5f0;
+  --foreground: #14213d;
+  --accent: #d4a373;
+  --accent-strong: #c16630;
+  --panel: rgba(255, 250, 240, 0.84);
+  --border: rgba(20, 33, 61, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--foreground);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  background-image:
+    radial-gradient(circle at top, rgba(212, 163, 115, 0.26), transparent 38%),
+    linear-gradient(135deg, #f8f5f0 0%, #f3eee5 44%, #fffaf0 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(212, 163, 115, 0.35);
+}

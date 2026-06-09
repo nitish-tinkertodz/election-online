@@ -1,0 +1,33 @@
+{
+  "name": "election-online",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "cf:dev": "wrangler pages dev .next --compatibility-date=2026-06-09",
+    "cf:deploy": "wrangler pages deploy .next",
+    "db:migrate": "wrangler d1 migrations apply election_online_db --local",
+    "db:seed": "tsx db/seed/seed.ts"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.91.0"
+  }
+}
