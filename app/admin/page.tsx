@@ -6,6 +6,11 @@ import {
 } from "@/lib/candidates/candidate-repository";
 import { listRoles, type RoleRecord } from "@/lib/roles/role-repository";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { BrandingForm } from "@/components/admin/branding-form";
+import {
+  getSchoolBranding,
+  isSchoolBrandingConfigured
+} from "@/lib/branding/branding-service";
 
 type AdminPageProps = {
   searchParams?: Promise<{
@@ -14,25 +19,72 @@ type AdminPageProps = {
   }>;
 };
 
+function SetupScreen({ branding }: { branding: Awaited<ReturnType<typeof getSchoolBranding>> }) {
+  return (
+    <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-16">
+      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="rounded-[2rem] border border-ink/10 bg-white/80 p-8 shadow-card backdrop-blur sm:p-10">
+          <p className="font-body text-sm uppercase tracking-[0.3em] text-ember">
+            School setup
+          </p>
+          <h1 className="mt-4 font-display text-5xl leading-tight text-ink">
+            Set the school banner before you start the election.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-ink/72">
+            Add the school name and logo here first. Once saved, the same banner will appear on the admin page, voter page, and results page.
+          </p>
+        </section>
+
+        <section>
+          <BrandingForm
+            schoolName={branding.school_name}
+            schoolLogoUrl={branding.school_logo_url}
+          />
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = (await searchParams) ?? {};
+  const branding = await getSchoolBranding();
+  const configured = await isSchoolBrandingConfigured();
+
   const authenticated = await isAdminAuthenticated();
   const status = authenticated ? await getElectionStatus().catch(() => "NOT_STARTED") : "NOT_STARTED";
 
   if (!authenticated) {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-6 py-16">
-        <section className="w-full max-w-xl rounded-[2rem] border border-ink/10 bg-white/80 p-10 shadow-card backdrop-blur">
+        <section className="w-full max-w-2xl rounded-[2rem] border border-ink/10 bg-white/80 p-10 shadow-card backdrop-blur">
           <p className="font-body text-sm uppercase tracking-[0.3em] text-ember">
             Admin Access
           </p>
           <h1 className="mt-4 font-display text-4xl text-ink">
-            Enter the shared admin password.
+            {configured ? "Enter the shared admin password." : "Set up the school banner first."}
           </h1>
           <p className="mt-4 text-base leading-7 text-ink/70">
-            This version uses a temporary shared password gate for protected
-            election controls.
+            {configured
+              ? "This version uses a temporary shared password gate for protected election controls."
+              : "Before anyone logs in, use first time setup to save the school name and logo. After that, the regular admin login becomes available."}
           </p>
+          {!configured ? (
+            <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-5">
+              <p className="text-sm font-semibold text-amber-900">
+                First time setup
+              </p>
+              <p className="mt-2 text-sm leading-6 text-amber-800">
+                This school has not been configured yet. Use the setup page to add the school name and logo.
+              </p>
+              <a
+                href="/"
+                className="mt-4 inline-flex rounded-full bg-amber-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-700"
+              >
+                Open setup page
+              </a>
+            </div>
+          ) : null}
           {params.error === "invalid-password" ? (
             <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               The password was incorrect. Please try again.
@@ -101,6 +153,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </span>
           </div>
         </div>
+      </section>
+
+      <section className="mb-8">
+        <BrandingForm
+          schoolName={branding.school_name}
+          schoolLogoUrl={branding.school_logo_url}
+        />
       </section>
 
       <AdminDashboard

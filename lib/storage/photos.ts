@@ -93,3 +93,45 @@ export async function storeCandidatePhoto(
     storageMode: "r2"
   } as const;
 }
+
+export async function storeLocalBrandingLogo(file: File) {
+  validatePhotoUpload(file.type, file.size);
+
+  const extension = file.type.split("/")[1] || "jpg";
+  const absoluteDir = path.join(process.cwd(), ".local-dev", "branding");
+  const absolutePath = path.join(absoluteDir, `logo.${extension}`);
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+
+  await mkdir(absoluteDir, { recursive: true });
+  await writeFile(absolutePath, fileBuffer);
+
+  return {
+    logoUrl: "/api/branding/logo",
+    storageMode: "local"
+  } as const;
+}
+
+export async function readLocalBrandingLogo() {
+  const directory = path.join(process.cwd(), ".local-dev", "branding");
+  const entries = await readdir(directory);
+  const fileName = entries.find((entry) => entry.startsWith("logo."));
+
+  if (!fileName) {
+    throw new Error("Logo not found.");
+  }
+
+  const absolutePath = path.join(directory, fileName);
+  const fileBuffer = await readFile(absolutePath);
+  const extension = fileName.split(".").pop()?.toLowerCase() ?? "jpg";
+  const contentType =
+    extension === "png"
+      ? "image/png"
+      : extension === "webp"
+        ? "image/webp"
+        : "image/jpeg";
+
+  return {
+    fileBuffer,
+    contentType
+  };
+}

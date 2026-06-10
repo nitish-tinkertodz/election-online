@@ -35,7 +35,8 @@ export function CompletionReset() {
           throw new Error("Unable to prepare the ballot for the next voter.");
         }
 
-        window.location.reload();
+        setIsResetting(false);
+        setSecondsRemaining(RESET_DELAY_SECONDS);
       } catch (caughtError) {
         setError(
           caughtError instanceof Error

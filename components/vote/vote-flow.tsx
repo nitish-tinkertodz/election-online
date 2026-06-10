@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 import { RoleCard } from "@/components/vote/role-card";
 
@@ -20,9 +19,9 @@ type VoteFlowProps = {
 };
 
 export function VoteFlow({ role, completedRoleIds }: VoteFlowProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setError("");
@@ -49,9 +48,7 @@ export function VoteFlow({ role, completedRoleIds }: VoteFlowProps) {
       return;
     }
 
-    startTransition(() => {
-      router.refresh();
-    });
+    setIsSaved(true);
   }
 
   return (
@@ -59,11 +56,16 @@ export function VoteFlow({ role, completedRoleIds }: VoteFlowProps) {
       action={handleSubmit}
       className="space-y-6"
     >
+        {isSaved ? (
+          <div className="rounded-[1.5rem] border border-forest/15 bg-forest/8 px-4 py-3 text-sm font-semibold text-forest">
+            Vote saved. You can close this page now.
+          </div>
+        ) : null}
         <RoleCard role={role} />
         <div className="flex justify-center">
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || isSaved}
             className="rounded-full bg-ink px-8 py-3 text-sm font-semibold text-cream transition hover:bg-forest disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? "Saving..." : "Confirm vote"}
