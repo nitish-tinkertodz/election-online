@@ -10,6 +10,7 @@ type Role = {
   description?: string;
   display_order: number;
   status: "Active" | "Inactive";
+  is_class_leader?: boolean;
 };
 
 type Candidate = {
@@ -17,13 +18,32 @@ type Candidate = {
   role_id: string;
   name: string;
   class_name: string;
+  class_id?: string;
+  division_id?: string;
   photo_url?: string;
+  status: "Active" | "Inactive";
+};
+
+type SchoolClass = {
+  id: string;
+  name: string;
+  display_order: number;
+  status: "Active" | "Inactive";
+};
+
+type Division = {
+  id: string;
+  class_id: string;
+  name: string;
+  display_order: number;
   status: "Active" | "Inactive";
 };
 
 type AdminDashboardProps = {
   roles: Role[];
   candidates: Candidate[];
+  classes: SchoolClass[];
+  divisions: Division[];
   status: string;
 };
 
@@ -33,6 +53,7 @@ type RoleFormState = {
   description: string;
   display_order: string;
   status: Role["status"];
+  is_class_leader: boolean;
 };
 
 type CandidateFormState = {
@@ -40,6 +61,8 @@ type CandidateFormState = {
   role_id: string;
   name: string;
   class_name: string;
+  class_id: string;
+  division_id: string;
   photo_url: string;
   status: Candidate["status"];
 };
@@ -52,12 +75,19 @@ type IconActionButtonProps = {
 
 type ActiveEditor = "role" | "candidate" | null;
 
+type ElectionScope = {
+  scope_type: "SCHOOL" | "CLASS";
+  class_id: string;
+  division_id: string;
+};
+
 const emptyRoleForm = (): RoleFormState => ({
   id: "",
   name: "",
   description: "",
   display_order: "1",
-  status: "Active"
+  status: "Active",
+  is_class_leader: false
 });
 
 const emptyCandidateForm = (roleId = ""): CandidateFormState => ({
@@ -65,6 +95,8 @@ const emptyCandidateForm = (roleId = ""): CandidateFormState => ({
   role_id: roleId,
   name: "",
   class_name: "",
+  class_id: "",
+  division_id: "",
   photo_url: "",
   status: "Active"
 });
@@ -192,7 +224,7 @@ function IconActionButton({
   );
 }
 
-export function AdminDashboard({ roles, candidates, status }: AdminDashboardProps) {
+export function AdminDashboard({ roles, candidates, classes, divisions, status }: AdminDashboardProps) {
   const router = useRouter();
   const roleFormRef = useRef<HTMLFormElement | null>(null);
   const candidateFormRef = useRef<HTMLFormElement | null>(null);
@@ -209,6 +241,11 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
   const [candidateForm, setCandidateForm] = useState<CandidateFormState>(
     emptyCandidateForm(roles[0]?.id ?? "")
   );
+  const [scope, setScope] = useState<ElectionScope>({
+    scope_type: "SCHOOL",
+    class_id: "",
+    division_id: ""
+  });
 
   const rolesById = useMemo(
     () => new Map(roles.map((role) => [role.id, role])),
@@ -221,6 +258,10 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
       items: candidates.filter((candidate) => candidate.role_id === role.id)
     }));
   }, [candidates, roles]);
+  const selectedRole = useMemo(
+    () => rolesById.get(candidateForm.role_id) ?? null,
+    [candidateForm.role_id, rolesById]
+  );
   const hasReadyBallot = useMemo(() => {
     const activeRoleIds = new Set(
       roles.filter((role) => role.status === "Active").map((role) => role.id)
@@ -241,7 +282,8 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
       name: role.name,
       description: role.description ?? "",
       display_order: String(role.display_order),
-      status: role.status
+      status: role.status,
+      is_class_leader: Boolean(role.is_class_leader)
     });
     window.requestAnimationFrame(() => {
       roleFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -261,6 +303,8 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
       role_id: candidate.role_id,
       name: candidate.name,
       class_name: candidate.class_name,
+      class_id: candidate.class_id ?? "",
+      division_id: candidate.division_id ?? "",
       photo_url: candidate.photo_url ?? "",
       status: candidate.status
     });
@@ -282,7 +326,8 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
       name: String(formData.get("name") ?? ""),
       description: String(formData.get("description") ?? ""),
       display_order: Number(formData.get("display_order") ?? 1),
-      status: String(formData.get("status") ?? "Active")
+      status: String(formData.get("status") ?? "Active"),
+      is_class_leader: Boolean(formData.get("is_class_leader"))
     };
 
     await saveJson(payload.id ? "/api/roles" : "/api/roles", payload.id ? "PUT" : "POST", payload);
@@ -303,6 +348,8 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
       role_id: String(formData.get("role_id") ?? ""),
       name: String(formData.get("name") ?? ""),
       class_name: String(formData.get("class_name") ?? ""),
+      class_id: String(formData.get("class_id") ?? candidateForm.class_id),
+      division_id: String(formData.get("division_id") ?? candidateForm.division_id),
       photo_url: candidateForm.photo_url,
       status: String(formData.get("status") ?? "Active")
     };
@@ -328,7 +375,7 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
     setError("");
     setMessage("");
 
-    await saveJson("/api/election/open", "POST", {});
+    await saveJson("/api/election/open", "POST", scope);
     setMessage("Ballot started.");
     startTransition(() => router.refresh());
   }
@@ -427,17 +474,108 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
               </>
             ) : (
               <>
+                <div className="min-w-[260px] rounded-[1.2rem] border border-ink/10 bg-white px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.22em] text-ink/48">
+                    Election scope
+                  </p>
+                  <div className="mt-3 grid gap-3">
+                    <label className="block">
+                      <span className="mb-2 block text-xs font-semibold text-ink">
+                        Scope type
+                      </span>
+                      <select
+                        value={scope.scope_type}
+                        onChange={(event) =>
+                          setScope((current) => ({
+                            ...current,
+                            scope_type: event.target.value as ElectionScope["scope_type"]
+                          }))
+                        }
+                        className="w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-ember"
+                      >
+                        <option value="SCHOOL">Whole school</option>
+                        <option value="CLASS">Class leader election</option>
+                      </select>
+                    </label>
+                    {scope.scope_type === "CLASS" ? (
+                      <>
+                        <label className="block">
+                          <span className="mb-2 block text-xs font-semibold text-ink">
+                            Class
+                          </span>
+                          <select
+                            value={scope.class_id}
+                            onChange={(event) =>
+                              setScope((current) => ({
+                                ...current,
+                                class_id: event.target.value,
+                                division_id: ""
+                              }))
+                            }
+                            className="w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-ember"
+                          >
+                            <option value="">Select class</option>
+                            {classes.map((item) => (
+                              <option
+                                key={item.id}
+                                value={item.id}
+                              >
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="block">
+                          <span className="mb-2 block text-xs font-semibold text-ink">
+                            Division
+                          </span>
+                          <select
+                            value={scope.division_id}
+                            onChange={(event) =>
+                              setScope((current) => ({
+                                ...current,
+                                division_id: event.target.value
+                              }))
+                            }
+                            className="w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-ember"
+                          >
+                            <option value="">Whole class</option>
+                            {divisions
+                              .filter((item) => !scope.class_id || item.class_id === scope.class_id)
+                              .map((item) => (
+                                <option
+                                  key={item.id}
+                                  value={item.id}
+                                >
+                                  {item.name}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={startBallot}
-                  disabled={isPending || !hasReadyBallot}
+                  disabled={
+                    isPending ||
+                    !hasReadyBallot ||
+                    (scope.scope_type === "CLASS" && !scope.class_id)
+                  }
                   className="rounded-full bg-forest px-4 py-2 text-sm font-semibold text-cream transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isPending ? "Starting..." : "Start ballot"}
                 </button>
                 {!hasReadyBallot ? (
                   <p className="text-sm text-ink/65">
-                    Add an active candidate before opening the ballot.
+                    Add at least one active role with two active candidates before opening the ballot.
+                  </p>
+                ) : null}
+                {scope.scope_type === "CLASS" && !scope.class_id ? (
+                  <p className="text-sm text-ink/65">
+                    Select a class before starting a class leader election.
                   </p>
                 ) : null}
               </>
@@ -547,6 +685,26 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
                 </select>
               </label>
             </div>
+            <label className="flex items-center gap-3 rounded-2xl border border-ink/15 bg-cream/40 px-4 py-3">
+              <input
+                type="checkbox"
+                name="is_class_leader"
+                checked={roleForm.is_class_leader}
+                onChange={(event) =>
+                  setRoleForm((current) => ({
+                    ...current,
+                    is_class_leader: event.target.checked
+                  }))
+                }
+                className="h-4 w-4 rounded border-ink/30"
+              />
+              <span className="text-sm font-semibold text-ink">
+                Class leader role
+              </span>
+            </label>
+            <p className="text-sm text-ink/60">
+              Turn this on when the role should belong to a class-level election. The candidate form will then show class and division fields.
+            </p>
             <div className="flex items-center gap-3">
               <button
                 type="submit"
@@ -641,6 +799,55 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
                 />
               </label>
             </div>
+            {selectedRole?.is_class_leader ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-ink">Class</span>
+                  <select
+                    name="class_id"
+                    value={candidateForm.class_id}
+                    onChange={(event) =>
+                      setCandidateForm((current) => ({
+                        ...current,
+                        class_id: event.target.value,
+                        division_id: ""
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 outline-none focus:border-ember"
+                  >
+                    <option value="">Select class</option>
+                    {classes.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-ink">Division</span>
+                  <select
+                    name="division_id"
+                    value={candidateForm.division_id}
+                    onChange={(event) =>
+                      setCandidateForm((current) => ({
+                        ...current,
+                        division_id: event.target.value
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 outline-none focus:border-ember"
+                  >
+                    <option value="">Whole class</option>
+                    {divisions
+                      .filter((item) => !candidateForm.class_id || item.class_id === candidateForm.class_id)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              </div>
+            ) : null}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-ink">Photo</span>
               <input

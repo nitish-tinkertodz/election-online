@@ -7,8 +7,18 @@ export async function hasReadyBallot() {
     roles.filter((role) => role.status === "Active").map((role) => role.id)
   );
 
-  return candidates.some(
-    (candidate) =>
-      candidate.status === "Active" && activeRoleIds.has(candidate.role_id)
-  );
+  const activeCandidatesByRole = new Map<string, number>();
+
+  for (const candidate of candidates) {
+    if (candidate.status !== "Active" || !activeRoleIds.has(candidate.role_id)) {
+      continue;
+    }
+
+    activeCandidatesByRole.set(
+      candidate.role_id,
+      (activeCandidatesByRole.get(candidate.role_id) ?? 0) + 1
+    );
+  }
+
+  return Array.from(activeCandidatesByRole.values()).some((count) => count >= 2);
 }

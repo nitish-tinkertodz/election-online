@@ -1,5 +1,4 @@
 import { VoteFlow } from "@/components/vote/vote-flow";
-import { CompletionReset } from "@/components/vote/completion-reset";
 import { VotePageAutoRefresh } from "@/components/vote/vote-page-auto-refresh";
 import { VoteStateMessage } from "@/components/vote/vote-state-message";
 import {
@@ -12,10 +11,6 @@ export default async function VotePage() {
   const sessionKey = (await getVoteSessionKey()) ?? "pending-session";
   const votingState = await getVotingPortalState(sessionKey);
   const completedRoleIds = await getCompletedRolesFromCookie();
-
-  const nextRole =
-    votingState.roles.find((role) => !completedRoleIds.includes(role.id)) ?? null;
-  const isComplete = nextRole === null && votingState.roles.length > 0;
 
   if (votingState.electionStatus === "NOT_STARTED") {
     return (
@@ -47,23 +42,21 @@ export default async function VotePage() {
     );
   }
 
-  if (isComplete) {
-    return (
-      <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-16">
-        <CompletionReset />
-      </main>
-    );
-  }
+  const nextEligibleRole =
+    votingState.roles.find((role) => !completedRoleIds.includes(role.id)) ?? null;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-16">
       <VotePageAutoRefresh />
-      {nextRole ? (
-        <VoteFlow
-          role={nextRole}
-          completedRoleIds={completedRoleIds}
+      {nextEligibleRole ? (
+        <VoteFlow role={nextEligibleRole} completedRoleIds={completedRoleIds} />
+      ) : (
+        <VoteStateMessage
+          eyebrow="Voter Portal"
+          title="No ballot is available."
+          description="Please ask the administrator to open a ballot with candidate details."
         />
-      ) : null}
+      )}
     </main>
   );
 }

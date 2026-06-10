@@ -3,12 +3,15 @@ type Candidate = {
   name: string;
   class_name: string;
   photo_url: string;
+  class_id?: string;
+  division_id?: string;
 };
 
 type RoleCardProps = {
   role: {
     id: string;
     name: string;
+    is_class_leader?: boolean | number;
     candidates: Candidate[];
   };
 };
@@ -16,7 +19,14 @@ type RoleCardProps = {
 export function RoleCard({ role }: RoleCardProps) {
   return (
     <section className="rounded-[2rem] border border-ink/10 bg-white/80 p-5 shadow-card backdrop-blur sm:rounded-[2.25rem] sm:p-8">
-      <h1 className="pr-4 font-display text-3xl text-ink sm:text-4xl">{role.name}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="pr-4 font-display text-3xl text-ink sm:text-4xl">{role.name}</h1>
+        {Boolean(role.is_class_leader) ? (
+          <span className="rounded-full border border-forest/20 bg-forest/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-forest">
+            Class Leader
+          </span>
+        ) : null}
+      </div>
 
       <div className="mt-6 grid gap-3 sm:mt-8 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {role.candidates.map((candidate) => (
@@ -57,6 +67,16 @@ export function RoleCard({ role }: RoleCardProps) {
                   {candidate.name}
                 </h2>
                 <p className="mt-1 text-sm text-ink/68">{candidate.class_name}</p>
+                {candidate.class_id || candidate.division_id ? (
+                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ink/48">
+                    {[
+                      candidate.class_id ? `Class ${candidate.class_id}` : "",
+                      candidate.division_id ? `Division ${candidate.division_id}` : ""
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
               </div>
             </div>
           </label>

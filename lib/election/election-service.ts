@@ -15,10 +15,14 @@ import {
   type ElectionStatus
 } from "@/lib/election/status";
 import { buildFinalResultsSnapshot } from "@/lib/results/finalize-election";
+import { queryAll } from "@/lib/db";
 
 type ElectionRow = {
   id: string;
   status: ElectionStatus;
+  scope_type: "SCHOOL" | "CLASS";
+  class_id: string | null;
+  division_id: string | null;
   started_at: string | null;
   closed_at: string | null;
   created_at: string;
@@ -28,7 +32,7 @@ type ElectionRow = {
 export async function getElection() {
   return queryFirst<ElectionRow>(
     getBindings(),
-    "SELECT id, status, started_at, closed_at, created_at, updated_at FROM elections WHERE id = ?;",
+    "SELECT id, status, scope_type, class_id, division_id, started_at, closed_at, created_at, updated_at FROM elections WHERE id = ?;",
     ["default-election"]
   );
 }
@@ -42,10 +46,14 @@ export async function getElectionStatus() {
   return election?.status ?? "NOT_STARTED";
 }
 
-export async function openElection() {
+export async function openElection(scope?: {
+  scope_type?: "SCHOOL" | "CLASS";
+  class_id?: string | null;
+  division_id?: string | null;
+}) {
   const readyBallot = await hasReadyBallot();
   if (!readyBallot) {
-    throw new Error("Add at least one active candidate before opening the ballot.");
+    throw new Error("Add at least one active role with at least two active candidates before opening the ballot.");
   }
 
   if (!getBindings().DB) {
@@ -67,14 +75,40 @@ export async function openElection() {
     throw new Error("Election can only be opened from NOT_STARTED.");
   }
 
+  if (
+    scope?.scope_type === "CLASS" &&
+    scope.class_id &&
+    scope.division_id
+  ) {
+    const duplicate = await queryAll<{
+      id: string;
+    }>(
+      getBindings(),
+      `SELECT id
+       FROM elections
+       WHERE status = 'OPEN'
+         AND scope_type = 'CLASS'
+         AND class_id = ?
+         AND division_id = ?;`,
+      [scope.class_id, scope.division_id]
+    );
+
+    if (duplicate.length > 0) {
+      throw new Error("A class leader election is already open for that class and division.");
+    }
+  }
+
   const now = new Date().toISOString();
+  const scopeType = scope?.scope_type ?? election?.scope_type ?? "SCHOOL";
+  const classId = scope?.class_id ?? election?.class_id ?? null;
+  const divisionId = scope?.division_id ?? election?.division_id ?? null;
 
   await execute(
     getBindings(),
     `UPDATE elections
-     SET status = ?, started_at = ?, updated_at = ?
+     SET status = ?, scope_type = ?, class_id = ?, division_id = ?, started_at = ?, updated_at = ?
      WHERE id = ?;`,
-    ["OPEN", now, now, "default-election"]
+    ["OPEN", scopeType, classId, divisionId, now, now, "default-election"]
   );
   await execute(
     getBindings(),

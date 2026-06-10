@@ -9,6 +9,7 @@ type VoteFlowProps = {
   role: {
     id: string;
     name: string;
+    is_class_leader?: boolean | number;
     candidates: {
       id: string;
       name: string;
@@ -59,6 +60,11 @@ export function VoteFlow({ role, completedRoleIds }: VoteFlowProps) {
       action={handleSubmit}
       className="space-y-6"
     >
+        {Boolean(role.is_class_leader) ? (
+          <div className="rounded-[1.5rem] border border-forest/15 bg-forest/8 px-4 py-3 text-sm font-semibold text-forest">
+            This is a class leader ballot. Please vote only if this role matches your class.
+          </div>
+        ) : null}
         <RoleCard role={role} />
         <div className="flex justify-center">
           <button

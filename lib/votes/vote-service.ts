@@ -15,30 +15,66 @@ type BallotRole = {
   description: string;
   display_order: number;
   status: "Active" | "Inactive";
+  is_class_leader: boolean;
+  class_id: string | null;
+  division_id: string | null;
   candidates: {
     id: string;
     name: string;
     class_name: string;
+    class_id: string;
+    division_id: string;
     photo_url: string;
     status: "Active" | "Inactive";
   }[];
 };
+
+type BallotRoleBase = Omit<BallotRole, "candidates">;
 
 function hasDatabaseBinding() {
   return Boolean(getBindings().DB);
 }
 
 export async function getBallotRoles() {
+  const election = await getElectionStatusWithScope();
+  const scopeType = election?.scope_type ?? "SCHOOL";
+
   if (!hasDatabaseBinding()) {
     const roles = (await getLocalRolesState()).filter((role) => role.status === "Active");
     const candidates = (await getLocalCandidatesState()).filter(
       (candidate) => candidate.status === "Active"
     );
 
-    return roles.map((role) => ({
-      ...role,
-      candidates: candidates.filter((candidate) => candidate.role_id === role.id)
-    }));
+    const visibleRoles =
+      scopeType === "CLASS"
+        ? roles.filter((role) => role.is_class_leader)
+        : roles.filter((role) => !role.is_class_leader);
+
+    return visibleRoles.map((role) => {
+      const baseRole: BallotRoleBase = {
+        id: role.id,
+        name: role.name,
+        description: role.description,
+        display_order: role.display_order,
+        status: role.status,
+        is_class_leader: role.is_class_leader,
+        class_id: null,
+        division_id: null
+      };
+
+      return {
+        ...baseRole,
+        candidates: candidates.filter((candidate) => candidate.role_id === role.id).map((candidate) => ({
+          id: candidate.id,
+          name: candidate.name,
+          class_name: candidate.class_name,
+          class_id: candidate.class_id,
+          division_id: candidate.division_id,
+          photo_url: candidate.photo_url,
+          status: candidate.status
+        }))
+      };
+    });
   }
 
   const roles = await queryAll<{
@@ -47,9 +83,12 @@ export async function getBallotRoles() {
     description: string;
     display_order: number;
     status: "Active" | "Inactive";
+    is_class_leader: number;
+    class_id: string | null;
+    division_id: string | null;
   }>(
     getBindings(),
-    `SELECT id, name, description, display_order, status
+    `SELECT id, name, description, display_order, status, is_class_leader, class_id, division_id
      FROM roles
      WHERE status = 'Active'
      ORDER BY display_order ASC;`
@@ -60,20 +99,45 @@ export async function getBallotRoles() {
     role_id: string;
     name: string;
     class_name: string;
+    class_id: string;
+    division_id: string;
     photo_url: string;
     status: "Active" | "Inactive";
   }>(
     getBindings(),
-    `SELECT id, role_id, name, class_name, photo_url, status
+    `SELECT id, role_id, name, class_name, class_id, division_id, photo_url, status
      FROM candidates
      WHERE status = 'Active'
      ORDER BY created_at ASC;`
   );
 
-  return roles.map((role) => ({
+  const filteredRoles =
+    scopeType === "CLASS"
+      ? roles.filter((role) => Boolean(role.is_class_leader))
+      : roles.filter((role) => !Boolean(role.is_class_leader));
+
+  return filteredRoles.map((role) => ({
     ...role,
     candidates: candidates.filter((candidate) => candidate.role_id === role.id)
   }));
+}
+
+async function getElectionStatusWithScope() {
+  if (!hasDatabaseBinding()) {
+    return null;
+  }
+
+  return queryFirst<{
+    scope_type: "SCHOOL" | "CLASS";
+    class_id: string | null;
+    division_id: string | null;
+  }>(
+    getBindings(),
+    `SELECT scope_type, class_id, division_id
+     FROM elections
+     WHERE id = ?;`,
+    ["default-election"]
+  );
 }
 
 export async function getVotingPortalState(sessionKey: string) {
@@ -155,6 +219,16 @@ export async function submitRoleVote(
 
   if (!candidate) {
     throw new Error("Candidate is invalid, inactive, or does not belong to the role.");
+  }
+
+  if (role.is_class_leader) {
+    const candidateClassMatches = !role.class_id || candidate.class_id === role.class_id;
+    const candidateDivisionMatches =
+      !role.division_id || candidate.division_id === role.division_id;
+
+    if (!candidateClassMatches || !candidateDivisionMatches) {
+      throw new Error("Candidate does not belong to the selected class leader election.");
+    }
   }
 
   const completedRoleIds = hasDatabaseBinding()

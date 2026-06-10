@@ -14,6 +14,7 @@ type RoleInput = {
   description?: string;
   display_order: number;
   status: "Active" | "Inactive";
+  is_class_leader?: boolean;
 };
 
 export type RoleRecord = RoleInput & {
@@ -36,7 +37,7 @@ export async function listRoles(): Promise<RoleRecord[]> {
 
   return queryAll<RoleRecord>(
     getBindings(),
-    "SELECT id, election_id, name, description, display_order, status, created_at, updated_at FROM roles ORDER BY display_order ASC;"
+    "SELECT id, election_id, name, description, display_order, status, is_class_leader, created_at, updated_at FROM roles ORDER BY display_order ASC;"
   );
 }
 
@@ -52,7 +53,8 @@ export async function createRole(input: RoleInput) {
       name: role.name,
       description: role.description || "",
       display_order: role.display_order,
-      status: role.status
+      status: role.status,
+      is_class_leader: Boolean(role.is_class_leader)
     };
 
     await setLocalRolesState([...roles.filter((item) => item.id !== id), nextRole]);
@@ -67,8 +69,8 @@ export async function createRole(input: RoleInput) {
 
   await execute(
     getBindings(),
-    `INSERT INTO roles (id, election_id, name, description, display_order, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO roles (id, election_id, name, description, display_order, status, is_class_leader, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       id,
       "default-election",
@@ -76,6 +78,7 @@ export async function createRole(input: RoleInput) {
       role.description || "",
       role.display_order,
       role.status,
+      role.is_class_leader ? 1 : 0,
       now,
       now
     ]
@@ -100,7 +103,8 @@ export async function updateRole(
             name: role.name,
             description: role.description || "",
             display_order: role.display_order,
-            status: role.status
+            status: role.status,
+            is_class_leader: Boolean(role.is_class_leader)
           }
         : item
     );
@@ -116,13 +120,14 @@ export async function updateRole(
   await execute(
     getBindings(),
     `UPDATE roles
-     SET name = ?, description = ?, display_order = ?, status = ?, updated_at = ?
+     SET name = ?, description = ?, display_order = ?, status = ?, is_class_leader = ?, updated_at = ?
      WHERE id = ?;`,
     [
       role.name,
       role.description || "",
       role.display_order,
       role.status,
+      role.is_class_leader ? 1 : 0,
       now,
       roleId
     ]

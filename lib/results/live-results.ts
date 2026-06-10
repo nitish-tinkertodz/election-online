@@ -21,6 +21,9 @@ export type ResultsRoleCandidate = {
 export type ResultsRole = {
   role_id: string;
   role_name: string;
+  is_class_leader?: boolean;
+  class_id?: string | null;
+  division_id?: string | null;
   total_votes: number;
   is_tie: boolean;
   winner_candidate_id: string | null;
@@ -41,6 +44,9 @@ type DatabaseResultsRow = {
   role_id: string;
   role_name: string;
   display_order: number;
+  is_class_leader?: number;
+  class_id?: string | null;
+  division_id?: string | null;
   candidate_id: string | null;
   candidate_name: string | null;
   class_name: string | null;
@@ -60,6 +66,9 @@ function buildResultsSnapshotFromRows(
       role_id: string;
       role_name: string;
       display_order: number;
+      is_class_leader?: number;
+      class_id?: string | null;
+      division_id?: string | null;
       candidates: Array<{
         candidate_id: string;
         candidate_name: string;
@@ -76,6 +85,9 @@ function buildResultsSnapshotFromRows(
         role_id: row.role_id,
         role_name: row.role_name,
         display_order: row.display_order,
+        is_class_leader: row.is_class_leader,
+        class_id: row.class_id ?? null,
+        division_id: row.division_id ?? null,
         candidates: []
       });
     }
@@ -99,6 +111,9 @@ function buildResultsSnapshotFromRows(
       return {
         role_id: role.role_id,
         role_name: role.role_name,
+        is_class_leader: Boolean(role.is_class_leader),
+        class_id: role.class_id ?? null,
+        division_id: role.division_id ?? null,
         total_votes: ranked.rankedCandidates.reduce(
           (sum, candidate) => sum + candidate.vote_count,
           0
@@ -174,6 +189,9 @@ async function buildDatabaseLiveSnapshot() {
        roles.id AS role_id,
        roles.name AS role_name,
        roles.display_order AS display_order,
+       roles.is_class_leader AS is_class_leader,
+       roles.class_id AS class_id,
+       roles.division_id AS division_id,
        candidates.id AS candidate_id,
        candidates.name AS candidate_name,
        candidates.class_name AS class_name,
@@ -190,6 +208,9 @@ async function buildDatabaseLiveSnapshot() {
        roles.id,
        roles.name,
        roles.display_order,
+       roles.is_class_leader,
+       roles.class_id,
+       roles.division_id,
        candidates.id,
        candidates.name,
        candidates.class_name,

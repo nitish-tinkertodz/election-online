@@ -1,4 +1,6 @@
 import { isAdminAuthenticated } from "@/lib/auth/admin";
+import { listClasses } from "@/lib/classes/class-repository";
+import { listDivisions } from "@/lib/divisions/division-repository";
 import { getElectionStatus } from "@/lib/election/election-service";
 import {
   listCandidates,
@@ -74,9 +76,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     );
   }
 
-  const [roles, candidates]: [RoleRecord[], CandidateRecord[]] = await Promise.all([
+  const [roles, candidates, classes, divisions]: [RoleRecord[], CandidateRecord[], Awaited<ReturnType<typeof listClasses>>, Awaited<ReturnType<typeof listDivisions>>] = await Promise.all([
     listRoles(),
-    listCandidates()
+    listCandidates(),
+    listClasses(),
+    listDivisions()
   ]);
 
   return (
@@ -90,14 +94,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             Shape the ballot, then open the room.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-ink/72">
-            Create and manage roles and candidates here before starting the election.
+            Create and manage school-wide roles or class-leader roles here before starting the election.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <span className="rounded-full border border-forest/15 bg-forest/10 px-4 py-2 text-sm font-semibold text-forest">
               Election status: {status}
             </span>
             <span className="rounded-full border border-ember/15 bg-ember/10 px-4 py-2 text-sm font-semibold text-ember">
-              Shared password protected
+              School and class ballots supported
             </span>
           </div>
         </div>
@@ -106,6 +110,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       <AdminDashboard
         roles={roles}
         candidates={candidates}
+        classes={classes}
+        divisions={divisions}
         status={status}
       />
     </main>

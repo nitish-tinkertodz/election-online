@@ -9,6 +9,7 @@ export type LocalRole = {
   description: string;
   display_order: number;
   status: "Active" | "Inactive";
+  is_class_leader: boolean;
 };
 
 export type LocalCandidate = {
@@ -16,6 +17,8 @@ export type LocalCandidate = {
   role_id: string;
   name: string;
   class_name: string;
+  class_id: string;
+  division_id: string;
   photo_url: string;
   status: "Active" | "Inactive";
 };

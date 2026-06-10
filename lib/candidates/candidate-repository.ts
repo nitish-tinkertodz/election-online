@@ -11,6 +11,8 @@ type CandidateInput = {
   name: string;
   class_name: string;
   role_id: string;
+  class_id?: string;
+  division_id?: string;
   photo_url?: string;
   status: "Active" | "Inactive";
 };
@@ -33,7 +35,7 @@ export async function listCandidates(): Promise<CandidateRecord[]> {
 
   return queryAll<CandidateRecord>(
     getBindings(),
-    `SELECT id, role_id, name, class_name, photo_url, status, created_at, updated_at
+    `SELECT id, role_id, name, class_name, class_id, division_id, photo_url, status, created_at, updated_at
      FROM candidates
      ORDER BY created_at DESC;`
   );
@@ -51,6 +53,8 @@ export async function createCandidate(input: CandidateInput) {
       role_id: candidate.role_id,
       name: candidate.name,
       class_name: candidate.class_name,
+      class_id: candidate.class_id || "",
+      division_id: candidate.division_id || "",
       photo_url: candidate.photo_url || "",
       status: candidate.status
     };
@@ -61,13 +65,15 @@ export async function createCandidate(input: CandidateInput) {
 
   await execute(
     getBindings(),
-    `INSERT INTO candidates (id, role_id, name, class_name, photo_url, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO candidates (id, role_id, name, class_name, class_id, division_id, photo_url, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       id,
       candidate.role_id,
       candidate.name,
       candidate.class_name,
+      candidate.class_id || "",
+      candidate.division_id || "",
       candidate.photo_url || "",
       candidate.status,
       now,
@@ -94,6 +100,8 @@ export async function updateCandidate(
             role_id: candidate.role_id,
             name: candidate.name,
             class_name: candidate.class_name,
+            class_id: candidate.class_id || "",
+            division_id: candidate.division_id || "",
             photo_url: candidate.photo_url || "",
             status: candidate.status
           }
@@ -106,12 +114,14 @@ export async function updateCandidate(
   await execute(
     getBindings(),
     `UPDATE candidates
-     SET role_id = ?, name = ?, class_name = ?, photo_url = ?, status = ?, updated_at = ?
+     SET role_id = ?, name = ?, class_name = ?, class_id = ?, division_id = ?, photo_url = ?, status = ?, updated_at = ?
      WHERE id = ?;`,
     [
       candidate.role_id,
       candidate.name,
       candidate.class_name,
+      candidate.class_id || "",
+      candidate.division_id || "",
       candidate.photo_url || "",
       candidate.status,
       now,
