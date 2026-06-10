@@ -3,7 +3,8 @@
 ## Prerequisites
 
 - Node.js 20+
-- Cloudflare account with D1 and R2 enabled
+- Cloudflare account with D1 enabled
+- R2 enabled only if you want real candidate photo storage during development
 - Admin access password for the election dashboard: `12345678`
 
 ## Setup
@@ -50,7 +51,7 @@ npm run dev
 ### Results page
 
 1. Open `/results` as an admin while the election is `OPEN`.
-2. Confirm live vote counts and role rankings render.
+2. Confirm the dashboard shows that official results are not available until the election is closed.
 3. Close the election.
 4. Confirm the page shows the official final snapshot and does not recalculate on refresh.
 

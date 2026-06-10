@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { execute, queryAll } from "@/lib/db";
 import { getBindings } from "@/lib/db/platform";
 import { brandingSchema } from "@/lib/validation";
@@ -29,6 +30,11 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    const unauthorized = await requireAdminApiAccess();
+    if (unauthorized) {
+      return unauthorized;
+    }
+
     const payload = brandingSchema.parse(await request.json());
     await execute(
       getBindings(),

@@ -8,6 +8,10 @@ export function buildCandidatePhotoKey(candidateId: string, extension: string) {
   return `candidates/${candidateId}/profile.${extension}`;
 }
 
+export function buildLocalPhotoPlaceholder(candidateId: string, extension: string) {
+  return `/mock-uploads/${candidateId}.${extension}`;
+}
+
 export function validatePhotoUpload(contentType: string, sizeInBytes: number) {
   const parsed = photoUploadSchema.parse({ contentType, sizeInBytes });
   const allowed = ["image/jpeg", "image/png", "image/webp"];
@@ -24,14 +28,18 @@ export async function storeCandidatePhoto(
   candidateId: string,
   file: File
 ) {
-  if (!bucket) {
-    throw new Error("R2 bucket `CANDIDATE_PHOTOS` is not configured.");
-  }
-
   validatePhotoUpload(file.type, file.size);
 
   const extension = file.type.split("/")[1] || "jpg";
   const key = buildCandidatePhotoKey(candidateId, extension);
+
+  if (!bucket) {
+    return {
+      photoUrl: buildLocalPhotoPlaceholder(candidateId, extension),
+      storageMode: "mock"
+    } as const;
+  }
+
   const fileBuffer = await file.arrayBuffer();
 
   await bucket.put(key, fileBuffer, {
@@ -40,5 +48,8 @@ export async function storeCandidatePhoto(
     }
   });
 
-  return key;
+  return {
+    photoUrl: key,
+    storageMode: "r2"
+  } as const;
 }

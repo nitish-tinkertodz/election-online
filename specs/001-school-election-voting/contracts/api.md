@@ -112,7 +112,7 @@
 ### `GET /api/results`
 
 - **Auth**: Administrator
-- **Returns**: grouped live results during `OPEN`, official frozen results after `CLOSED`
+- **Returns**: pending status before closure, official frozen results after `CLOSED`
 - **Rules**: no voter identity data may be exposed
 
 ## Branding

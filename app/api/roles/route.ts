@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { createRole, listRoles } from "@/lib/roles/role-repository";
 
 export async function GET() {
   try {
+    const unauthorized = await requireAdminApiAccess();
+    if (unauthorized) {
+      return unauthorized;
+    }
+
     return NextResponse.json({ items: await listRoles() });
   } catch (error) {
     return NextResponse.json(
@@ -15,6 +21,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const unauthorized = await requireAdminApiAccess();
+    if (unauthorized) {
+      return unauthorized;
+    }
+
     const payload = await request.json();
     const role = await createRole(payload);
     return NextResponse.json({ item: role }, { status: 201 });

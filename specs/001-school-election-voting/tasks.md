@@ -64,14 +64,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Implement public election-state gating for `/vote` in `app/vote/page.tsx` and `app/api/election/status/route.ts`
-- [ ] T024 [P] [US2] Implement anonymous session creation and completed-role persistence in `lib/election/session.ts` and `app/api/votes/route.ts`
-- [ ] T025 [P] [US2] Implement vote validation for open-state, active role, active candidate, and role alignment in `lib/votes/vote-service.ts`
-- [ ] T026 [US2] Implement atomic vote submission and duplicate-role prevention within a browser session in `app/api/votes/route.ts`
-- [ ] T027 [US2] Build the role-by-role voting flow UI in `components/vote/role-card.tsx` and `app/vote/page.tsx`
-- [ ] T028 [US2] Build the not-started and closed state messages for `/vote` in `components/vote/vote-state-message.tsx`
-- [ ] T029 [US2] Build client-side progress handling for next-pending-role navigation in `components/vote/vote-flow.tsx`
-- [ ] T030 [US2] Persist completed-role progress across refreshes and tab changes until browser close in `components/vote/vote-session.ts`
+- [X] T023 [P] [US2] Implement public election-state gating for `/vote` in `app/vote/page.tsx` and `app/api/election/status/route.ts`
+- [X] T024 [P] [US2] Implement anonymous session creation and completed-role persistence in `lib/election/session.ts` and `app/api/votes/route.ts`
+- [X] T025 [P] [US2] Implement vote validation for open-state, active role, active candidate, and role alignment in `lib/votes/vote-service.ts`
+- [X] T026 [US2] Implement atomic vote submission and duplicate-role prevention within a browser session in `app/api/votes/route.ts`
+- [X] T027 [US2] Build the role-by-role voting flow UI in `components/vote/role-card.tsx` and `app/vote/page.tsx`
+- [X] T028 [US2] Build the not-started and closed state messages for `/vote` in `components/vote/vote-state-message.tsx`
+- [X] T029 [US2] Build client-side progress handling for next-pending-role navigation in `components/vote/vote-flow.tsx`
+- [X] T030 [US2] Persist completed-role progress across refreshes and tab changes until browser close in `components/vote/vote-session.ts`
 
 **Checkpoint**: User Story 2 should now be fully functional and testable independently.
 
@@ -85,11 +85,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T031 [P] [US3] Implement grouped live results retrieval in `lib/results/live-results.ts` and `app/api/results/route.ts`
-- [ ] T032 [P] [US3] Implement winner, ranking, and tie calculation helpers in `lib/results/ranking.ts`
-- [ ] T033 [US3] Implement the read-only results dashboard UI in `app/results/page.tsx`
-- [ ] T034 [US3] Build role-grouped results cards and tie/winner visuals in `components/results/`
-- [ ] T035 [US3] Implement live-versus-official result state labeling in `components/results/results-banner.tsx`
+- [X] T031 [P] [US3] Implement grouped live results retrieval in `lib/results/live-results.ts` and `app/api/results/route.ts`
+- [X] T032 [P] [US3] Implement winner, ranking, and tie calculation helpers in `lib/results/ranking.ts`
+- [X] T033 [US3] Implement the read-only results dashboard UI in `app/results/page.tsx`
+- [X] T034 [US3] Build role-grouped results cards and tie/winner visuals in `components/results/`
+- [X] T035 [US3] Implement live-versus-official result state labeling in `components/results/results-banner.tsx`
 - [ ] T036 [US3] Wire periodic refresh or auto-update behavior for live results in `app/results/page.tsx`
 
 **Checkpoint**: All user stories should now be independently functional.
@@ -100,11 +100,11 @@
 
 **Purpose**: Finish quality, consistency, and delivery readiness across the whole feature.
 
-- [ ] T037 Harden server-side authorization and error handling across `app/api/` and `app/*/page.tsx`
-- [ ] T038 Add empty, loading, and failure states for admin, voting, and results screens in `components/shared/`
-- [ ] T039 Verify D1 migration and seed scripts against the quickstart flow in `db/migrations/`, `db/seed/seed.ts`, and `specs/001-school-election-voting/quickstart.md`
-- [ ] T040 Review and align implementation notes with the API contract in `specs/001-school-election-voting/contracts/api.md`
-- [ ] T041 Run a final cleanup pass on shared election utilities in `lib/`
+- [X] T037 Harden server-side authorization and error handling across `app/api/` and `app/*/page.tsx`
+- [X] T038 Add empty, loading, and failure states for admin, voting, and results screens in `components/shared/`
+- [X] T039 Verify D1 migration and seed scripts against the quickstart flow in `db/migrations/`, `db/seed/seed.ts`, and `specs/001-school-election-voting/quickstart.md`
+- [X] T040 Review and align implementation notes with the API contract in `specs/001-school-election-voting/contracts/api.md`
+- [X] T041 Run a final cleanup pass on shared election utilities in `lib/`
 
 ---
 

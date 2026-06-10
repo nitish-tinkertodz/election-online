@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { createCandidate, listCandidates } from "@/lib/candidates/candidate-repository";
 
 export async function GET() {
   try {
+    const unauthorized = await requireAdminApiAccess();
+    if (unauthorized) {
+      return unauthorized;
+    }
+
     return NextResponse.json({ items: await listCandidates() });
   } catch (error) {
     return NextResponse.json(
@@ -15,6 +21,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const unauthorized = await requireAdminApiAccess();
+    if (unauthorized) {
+      return unauthorized;
+    }
+
     const payload = await request.json();
     const candidate = await createCandidate(payload);
     return NextResponse.json({ item: candidate }, { status: 201 });

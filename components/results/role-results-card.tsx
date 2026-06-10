@@ -1,0 +1,75 @@
+import type { ResultsRole } from "@/lib/results/live-results";
+
+type RoleResultsCardProps = {
+  role: ResultsRole;
+  mode?: "live" | "official";
+};
+
+export function RoleResultsCard({
+  role,
+  mode = "official"
+}: RoleResultsCardProps) {
+  return (
+    <section className="rounded-[2rem] border border-ink/10 bg-white/80 p-6 shadow-card backdrop-blur">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.24em] text-ink/48">Role</p>
+          <h2 className="mt-2 font-display text-3xl text-ink">{role.role_name}</h2>
+        </div>
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-[0.24em] text-ink/48">Votes</p>
+          <p className="mt-2 font-display text-3xl text-ink">{role.total_votes}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-ink/68">
+        <span>
+          {role.is_tie
+            ? "Tie detected for the lead."
+            : role.winner_candidate_id
+              ? mode === "official"
+                ? "Winner recorded."
+                : "Current leader shown."
+              : "No winning candidate yet."}
+        </span>
+      </div>
+
+      <div className="mt-6 space-y-3">
+        {role.candidates.map((candidate) => (
+          <div
+            key={candidate.candidate_id}
+            className="rounded-[1.5rem] border border-ink/10 bg-cream/70 p-4"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display text-2xl text-ink">
+                    {candidate.candidate_name}
+                  </h3>
+                  {candidate.is_winner ? (
+                    <span className="rounded-full bg-forest/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-forest">
+                      {mode === "official" ? "Winner" : "Leading"}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-sm text-ink/68">{candidate.class_name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-[0.24em] text-ink/48">
+                  Rank
+                </p>
+                <p className="mt-2 font-display text-2xl text-ink">
+                  #{candidate.rank}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between text-sm text-ink/68">
+              <span>Vote count</span>
+              <span className="font-semibold text-ink">{candidate.vote_count}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

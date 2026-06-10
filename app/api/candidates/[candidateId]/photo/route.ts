@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { getBindings } from "@/lib/db/platform";
 import { storeCandidatePhoto } from "@/lib/storage/photos";
 
@@ -7,6 +8,11 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ candidateId: string }> }
 ) {
+  const unauthorized = await requireAdminApiAccess();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   const { candidateId } = await params;
   const formData = await request.formData();
   const photo = formData.get("photo");
@@ -16,7 +22,7 @@ export async function POST(
   }
 
   try {
-    const key = await storeCandidatePhoto(
+    const result = await storeCandidatePhoto(
       (getBindings() as typeof globalThis & {
         CANDIDATE_PHOTOS?: { put: (...args: unknown[]) => Promise<unknown> };
       }).CANDIDATE_PHOTOS,
@@ -24,7 +30,10 @@ export async function POST(
       photo
     );
 
-    return NextResponse.json({ photo_url: key });
+    return NextResponse.json({
+      photo_url: result.photoUrl,
+      storage_mode: result.storageMode
+    });
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Photo upload failed." },
@@ -34,6 +43,11 @@ export async function POST(
 }
 
 export async function DELETE() {
+  const unauthorized = await requireAdminApiAccess();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
   return NextResponse.json(
     { message: "Photo removal is not implemented yet." },
     { status: 501 }

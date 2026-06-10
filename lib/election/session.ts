@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 
 export const VOTE_SESSION_COOKIE = "vote_session_key";
+export const COMPLETED_ROLES_COOKIE = "completed_role_ids";
 
 function buildSessionKey() {
   return `vote_${crypto.randomUUID()}`;
@@ -26,6 +27,11 @@ export async function getOrCreateVoteSessionKey() {
   return sessionKey;
 }
 
+export async function getVoteSessionKey() {
+  const cookieStore = await cookies();
+  return cookieStore.get(VOTE_SESSION_COOKIE)?.value ?? null;
+}
+
 export function serializeCompletedRoles(roleIds: string[]) {
   return JSON.stringify([...new Set(roleIds)]);
 }
@@ -45,4 +51,9 @@ export function parseCompletedRoles(value: string | null | undefined) {
 
 export function hasCompletedRole(completedRoleIds: string[], roleId: string) {
   return completedRoleIds.includes(roleId);
+}
+
+export async function getCompletedRolesFromCookie() {
+  const cookieStore = await cookies();
+  return parseCompletedRoles(cookieStore.get(COMPLETED_ROLES_COOKIE)?.value);
 }

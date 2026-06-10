@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 
 const ADMIN_COOKIE = "admin_session";
 const DEFAULT_ADMIN_PASSWORD = "12345678";
@@ -34,6 +35,22 @@ export async function requireAdminAccess(nextPath = "/admin") {
   }
 }
 
+export async function requireAdminApiAccess() {
+  if (await isAdminAuthenticated()) {
+    return null;
+  }
+
+  return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+}
+
 export async function assertAdminPassword(password: string) {
   return password === getAdminPassword();
+}
+
+export function normalizeAdminNextPath(nextPath: string | null | undefined) {
+  if (!nextPath || !nextPath.startsWith("/")) {
+    return "/admin";
+  }
+
+  return nextPath.startsWith("/results") ? nextPath : "/admin";
 }

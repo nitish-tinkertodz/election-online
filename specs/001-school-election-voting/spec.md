@@ -561,3 +561,4 @@ The application has exactly three main pages: `/admin`, `/vote`, and `/results`.
 - A single election instance has one official final results snapshot for each completed closure event unless a future reset or recount feature is explicitly introduced.
 - The initial release supports a single school election context at a time.
 - Deployment will target Cloudflare-hosted web delivery and use a GitHub repository as the primary source-control system.
+- The application database is provisioned through the project’s Cloudflare D1 configuration and initialized through the migration and seed setup during local and Cloudflare development.
