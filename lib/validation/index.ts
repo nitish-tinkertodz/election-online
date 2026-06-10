@@ -18,7 +18,7 @@ export const candidateSchema = z.object({
   name: z.string().trim().min(1).max(120),
   class_name: z.string().trim().min(1).max(40),
   role_id: z.string().trim().min(1),
-  photo_url: z.string().url().optional().or(z.literal("")),
+  photo_url: z.string().trim().max(500).optional().or(z.literal("")),
   status: candidateStatusSchema
 });
 

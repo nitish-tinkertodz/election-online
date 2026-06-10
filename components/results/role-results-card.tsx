@@ -41,7 +41,19 @@ export function RoleResultsCard({
             className="rounded-[1.5rem] border border-ink/10 bg-cream/70 p-4"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
+              <div className="flex min-w-0 flex-1 gap-4">
+                <div className="flex aspect-square w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.25rem] border border-dashed border-ink/15 bg-white text-[10px] uppercase tracking-[0.22em] text-ink/45">
+                  {candidate.photo_url ? (
+                    <img
+                      src={candidate.photo_url}
+                      alt={candidate.candidate_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    "Photo"
+                  )}
+                </div>
+                <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-display text-2xl text-ink">
                     {candidate.candidate_name}
@@ -53,6 +65,7 @@ export function RoleResultsCard({
                   ) : null}
                 </div>
                 <p className="mt-2 text-sm text-ink/68">{candidate.class_name}</p>
+              </div>
               </div>
               <div className="text-right">
                 <p className="text-xs uppercase tracking-[0.24em] text-ink/48">

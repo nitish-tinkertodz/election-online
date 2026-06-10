@@ -1,3 +1,6 @@
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
 import { photoUploadSchema } from "@/lib/validation";
 
 type R2BucketLike = {
@@ -9,7 +12,37 @@ export function buildCandidatePhotoKey(candidateId: string, extension: string) {
 }
 
 export function buildLocalPhotoPlaceholder(candidateId: string, extension: string) {
-  return `/mock-uploads/${candidateId}.${extension}`;
+  void extension;
+  return `/api/candidates/${candidateId}/photo`;
+}
+
+function getLocalCandidatePhotoDir(candidateId: string) {
+  return path.join(process.cwd(), ".local-dev", "candidate-photos", candidateId);
+}
+
+export async function readLocalCandidatePhoto(candidateId: string) {
+  const directory = getLocalCandidatePhotoDir(candidateId);
+  const entries = await readdir(directory);
+  const fileName = entries.find((entry) => entry.startsWith("profile."));
+
+  if (!fileName) {
+    throw new Error("Photo not found.");
+  }
+
+  const absolutePath = path.join(directory, fileName);
+  const fileBuffer = await readFile(absolutePath);
+  const extension = fileName.split(".").pop()?.toLowerCase() ?? "jpg";
+  const contentType =
+    extension === "png"
+      ? "image/png"
+      : extension === "webp"
+        ? "image/webp"
+        : "image/jpeg";
+
+  return {
+    fileBuffer,
+    contentType
+  };
 }
 
 export function validatePhotoUpload(contentType: string, sizeInBytes: number) {
@@ -34,9 +67,16 @@ export async function storeCandidatePhoto(
   const key = buildCandidatePhotoKey(candidateId, extension);
 
   if (!bucket) {
+    const absoluteDir = getLocalCandidatePhotoDir(candidateId);
+    const absolutePath = path.join(absoluteDir, `profile.${extension}`);
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+
+    await mkdir(absoluteDir, { recursive: true });
+    await writeFile(absolutePath, fileBuffer);
+
     return {
       photoUrl: buildLocalPhotoPlaceholder(candidateId, extension),
-      storageMode: "mock"
+      storageMode: "local"
     } as const;
   }
 

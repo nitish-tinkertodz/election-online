@@ -121,3 +121,53 @@ export async function updateCandidate(
 
   return { id: candidateId, ...candidate, updated_at: now };
 }
+
+export async function updateCandidatePhotoUrl(
+  candidateId: string,
+  photoUrl: string
+) {
+  const now = new Date().toISOString();
+
+  if (!getBindings().DB) {
+    const candidates = await getLocalCandidatesState();
+    const nextCandidates = candidates.map((item) =>
+      item.id === candidateId
+        ? {
+            ...item,
+            photo_url: photoUrl
+          }
+        : item
+    );
+    await setLocalCandidatesState(nextCandidates);
+    return { id: candidateId, photo_url: photoUrl, updated_at: now };
+  }
+
+  await execute(
+    getBindings(),
+    `UPDATE candidates
+     SET photo_url = ?, updated_at = ?
+     WHERE id = ?;`,
+    [photoUrl, now, candidateId]
+  );
+
+  return { id: candidateId, photo_url: photoUrl, updated_at: now };
+}
+
+export async function deleteCandidate(candidateId: string) {
+  if (!getBindings().DB) {
+    const candidates = await getLocalCandidatesState();
+    await setLocalCandidatesState(
+      candidates.filter((candidate) => candidate.id !== candidateId)
+    );
+    return { id: candidateId };
+  }
+
+  await execute(
+    getBindings(),
+    `DELETE FROM candidates
+     WHERE id = ?;`,
+    [candidateId]
+  );
+
+  return { id: candidateId };
+}

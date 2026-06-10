@@ -1,6 +1,8 @@
 import { execute, queryAll } from "@/lib/db";
 import { getBindings } from "@/lib/db/platform";
+import { deleteCandidate } from "@/lib/candidates/candidate-repository";
 import {
+  getLocalCandidatesState,
   getLocalRolesState,
   setLocalRolesState,
   type LocalRole
@@ -132,4 +134,37 @@ export async function updateRole(
     ...role,
     updated_at: now
   };
+}
+
+export async function deleteRole(roleId: string) {
+  if (!getBindings().DB) {
+    const [roles, candidates] = await Promise.all([
+      getLocalRolesState(),
+      getLocalCandidatesState()
+    ]);
+
+    await Promise.all(
+      candidates
+        .filter((candidate) => candidate.role_id === roleId)
+        .map((candidate) => deleteCandidate(candidate.id))
+    );
+
+    await setLocalRolesState(roles.filter((role) => role.id !== roleId));
+    return { id: roleId };
+  }
+
+  await execute(
+    getBindings(),
+    `DELETE FROM candidates
+     WHERE role_id = ?;`,
+    [roleId]
+  );
+  await execute(
+    getBindings(),
+    `DELETE FROM roles
+     WHERE id = ?;`,
+    [roleId]
+  );
+
+  return { id: roleId };
 }

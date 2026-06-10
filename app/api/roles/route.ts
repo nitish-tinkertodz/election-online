@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { requireAdminApiAccess } from "@/lib/auth/admin";
-import { createRole, listRoles, updateRole } from "@/lib/roles/role-repository";
+import {
+  createRole,
+  deleteRole,
+  listRoles,
+  updateRole
+} from "@/lib/roles/role-repository";
 
 export async function GET() {
   try {
@@ -59,6 +64,31 @@ export async function PUT(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Unable to update role." },
+      { status: 400 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const unauthorized = await requireAdminApiAccess();
+    if (unauthorized) {
+      return unauthorized;
+    }
+
+    const payload = (await request.json()) as { id?: string };
+
+    if (!payload.id) {
+      return NextResponse.json(
+        { message: "Role id is required for deletion." },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ item: await deleteRole(payload.id) });
+  } catch (error) {
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Unable to delete role." },
       { status: 400 }
     );
   }
