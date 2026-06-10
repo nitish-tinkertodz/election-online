@@ -1,9 +1,9 @@
 import { queryAll, queryFirst } from "@/lib/db";
 import { getBindings } from "@/lib/db/platform";
 import {
-  getLocalCandidates,
+  getLocalCandidatesState,
   getLocalFinalResult,
-  getLocalRoles,
+  getLocalRolesState,
   getLocalVotes
 } from "@/lib/election/local-store";
 import { rankCandidates } from "@/lib/results/ranking";
@@ -121,8 +121,8 @@ function buildResultsSnapshotFromRows(
 }
 
 async function buildLocalLiveSnapshot() {
-  const roles = getLocalRoles().filter((role) => role.status === "Active");
-  const candidates = getLocalCandidates().filter(
+  const roles = (await getLocalRolesState()).filter((role) => role.status === "Active");
+  const candidates = (await getLocalCandidatesState()).filter(
     (candidate) => candidate.status === "Active"
   );
   const votes = await getLocalVotes();

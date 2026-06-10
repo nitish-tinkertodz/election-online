@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { VoteStateMessage } from "@/components/vote/vote-state-message";
 
 const RESET_DELAY_SECONDS = 5;
 
 export function CompletionReset() {
-  const router = useRouter();
   const [secondsRemaining, setSecondsRemaining] = useState(RESET_DELAY_SECONDS);
   const [isResetting, setIsResetting] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +35,7 @@ export function CompletionReset() {
           throw new Error("Unable to prepare the ballot for the next voter.");
         }
 
-        router.refresh();
+        window.location.reload();
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
@@ -52,7 +50,7 @@ export function CompletionReset() {
       window.clearInterval(intervalId);
       window.clearTimeout(timeoutId);
     };
-  }, [router]);
+  }, []);
 
   return (
     <div className="space-y-4">

@@ -38,6 +38,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               The password was incorrect. Please try again.
             </p>
           ) : null}
+          {params.error === "admin-session-active" ? (
+            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Another admin session is already active on this network. Close that session or wait for it to expire before signing in here.
+            </p>
+          ) : null}
+          {params.error === "login-failed" ? (
+            <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              The admin session could not be started. Please try again.
+            </p>
+          ) : null}
           <form action="/api/auth/login" method="post" className="mt-8 space-y-4">
             <input type="hidden" name="next" value={params.next ?? "/admin"} />
             <label className="block">

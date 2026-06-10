@@ -25,6 +25,7 @@
 
 - Opens the election explicitly.
 - Requires authenticated administrator access.
+- Rejects the request until at least one active candidate is assigned to an active role.
 - After success, the vote page may accept ballot interaction.
 
 ## Voting
@@ -44,5 +45,5 @@
 ### `/vote`
 
 - Public voter page that must display a disabled state until the election is open.
+- Must treat an empty ballot with no configured candidates as closed until admin setup is complete.
 - Must show role cards in a readable wrapped layout.
-

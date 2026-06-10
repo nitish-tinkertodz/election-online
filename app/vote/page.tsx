@@ -1,6 +1,6 @@
 import { VoteFlow } from "@/components/vote/vote-flow";
 import { CompletionReset } from "@/components/vote/completion-reset";
-import { VoteSession } from "@/components/vote/vote-session";
+import { VotePageAutoRefresh } from "@/components/vote/vote-page-auto-refresh";
 import { VoteStateMessage } from "@/components/vote/vote-state-message";
 import {
   getCompletedRolesFromCookie,
@@ -20,6 +20,7 @@ export default async function VotePage() {
   if (votingState.electionStatus === "NOT_STARTED") {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-16">
+        <VotePageAutoRefresh />
         <VoteStateMessage
           eyebrow="Voter Portal"
           title="Voting is not open yet."
@@ -30,12 +31,17 @@ export default async function VotePage() {
   }
 
   if (votingState.electionStatus === "CLOSED") {
+    const description = votingState.hasReadyBallot
+      ? "This ballot is no longer accepting votes. The official results view remains restricted to admin users."
+      : "No candidate details are available yet. The ballot will stay closed until an administrator finishes setup and opens voting.";
+
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-16">
+        <VotePageAutoRefresh />
         <VoteStateMessage
           eyebrow="Voter Portal"
-          title="Voting has been closed."
-          description="This ballot is no longer accepting votes. The official results view remains restricted to admin users."
+          title={votingState.hasReadyBallot ? "Voting has been closed." : "Ballot setup is still in progress."}
+          description={description}
         />
       </main>
     );
@@ -51,27 +57,13 @@ export default async function VotePage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-16">
-      <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-        <div className="space-y-6">
-          {nextRole ? (
-            <VoteFlow
-              role={nextRole}
-              completedRoleIds={completedRoleIds}
-            />
-          ) : null}
-        </div>
-        <aside className="space-y-4">
-          <VoteSession completedRoleIds={completedRoleIds} />
-          <div className="rounded-[1.6rem] border border-ink/10 bg-white/75 p-5 shadow-card backdrop-blur">
-            <p className="text-xs uppercase tracking-[0.24em] text-ink/48">
-              Session scope
-            </p>
-            <p className="mt-3 text-sm leading-6 text-ink/68">
-              This version prevents duplicate role voting only within the same browser session.
-            </p>
-          </div>
-        </aside>
-      </div>
+      <VotePageAutoRefresh />
+      {nextRole ? (
+        <VoteFlow
+          role={nextRole}
+          completedRoleIds={completedRoleIds}
+        />
+      ) : null}
     </main>
   );
 }

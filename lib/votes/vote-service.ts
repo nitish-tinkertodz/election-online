@@ -2,8 +2,8 @@ import { execute, queryAll, queryFirst } from "@/lib/db";
 import { getBindings } from "@/lib/db/platform";
 import {
   appendLocalVote,
-  getLocalCandidates,
-  getLocalRoles
+  getLocalCandidatesState,
+  getLocalRolesState
 } from "@/lib/election/local-store";
 import { getElectionStatus } from "@/lib/election/election-service";
 import { serializeCompletedRoles } from "@/lib/election/session";
@@ -30,8 +30,8 @@ function hasDatabaseBinding() {
 
 export async function getBallotRoles() {
   if (!hasDatabaseBinding()) {
-    const roles = getLocalRoles().filter((role) => role.status === "Active");
-    const candidates = getLocalCandidates().filter(
+    const roles = (await getLocalRolesState()).filter((role) => role.status === "Active");
+    const candidates = (await getLocalCandidatesState()).filter(
       (candidate) => candidate.status === "Active"
     );
 
@@ -82,13 +82,18 @@ export async function getVotingPortalState(sessionKey: string) {
   const completedRoleIds = await getCompletedRoleIds(sessionKey);
   const nextRole =
     roles.find((role) => !completedRoleIds.includes(role.id)) ?? null;
+  const hasReadyBallot = roles.some((role) => role.candidates.length > 0);
+  const effectiveElectionStatus =
+    hasReadyBallot ? electionStatus : "CLOSED";
 
   return {
-    electionStatus,
+    electionStatus: effectiveElectionStatus,
+    configuredElectionStatus: electionStatus,
+    hasReadyBallot,
     roles,
     completedRoleIds,
     nextRole,
-    isComplete: nextRole === null && roles.length > 0
+    isComplete: hasReadyBallot && nextRole === null && roles.length > 0
   };
 }
 
@@ -126,12 +131,18 @@ export async function submitRoleVote(
 ) {
   const parsed = voteSubmissionSchema.parse(payload);
   const electionStatus = await getElectionStatus();
+  const roles = await getBallotRoles();
+
+  if (!roles.some((role) => role.candidates.length > 0)) {
+    throw new Error(
+      "Voting is closed until an administrator adds candidate details and opens the ballot."
+    );
+  }
 
   if (electionStatus !== "OPEN") {
     throw new Error("Voting is not open.");
   }
 
-  const roles = await getBallotRoles();
   const role = roles.find((item) => item.id === parsed.role_id);
 
   if (!role) {

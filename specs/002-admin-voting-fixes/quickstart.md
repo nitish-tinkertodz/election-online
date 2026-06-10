@@ -17,9 +17,9 @@
 ### 2) Vote-page gating
 
 1. Keep the election in the not-started state.
-2. Open `/vote` directly in a browser.
-3. Confirm the page shows a disabled or not-started state and does not allow voting.
-4. Start the election as an admin.
+2. Leave the ballot without any active candidates and open `/vote` directly in a browser.
+3. Confirm the page shows a closed setup-in-progress state and does not allow voting.
+4. Add at least one active candidate as an admin and start the election.
 5. Refresh `/vote` and confirm the ballot becomes available.
 
 ### 3) Candidate card layout

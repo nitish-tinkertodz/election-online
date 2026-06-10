@@ -26,6 +26,7 @@ type LocalStateSnapshot = {
   candidates: LocalCandidate[];
   votes: LocalVoteRecord[];
   finalResult: LocalFinalResultSnapshot | null;
+  adminSessionLock: LocalAdminSessionLock | null;
 };
 
 export type LocalVoteRecord = {
@@ -41,12 +42,21 @@ export type LocalFinalResultSnapshot = {
   status: "FINAL";
 };
 
+export type LocalAdminSessionLock = {
+  sessionToken: string;
+  clientIp: string;
+  expiresAt: string;
+  issuedAt: string;
+  updatedAt: string;
+};
+
 const initialState = (): LocalStateSnapshot => ({
   electionStatus: "NOT_STARTED",
   roles: [...localRoles],
   candidates: [...localCandidates],
   votes: [],
-  finalResult: null
+  finalResult: null,
+  adminSessionLock: null
 });
 
 const localRoles: LocalRole[] = [];
@@ -154,6 +164,19 @@ export async function getLocalFinalResult() {
   return state.finalResult;
 }
 
+export async function getLocalAdminSessionLock() {
+  const state = await readLocalState();
+  return state.adminSessionLock;
+}
+
+export async function setLocalAdminSessionLock(adminSessionLock: LocalAdminSessionLock | null) {
+  const state = await readLocalState();
+  await writeLocalState({
+    ...state,
+    adminSessionLock
+  });
+}
+
 export function getLocalRoles() {
   return [...localRoles].sort((left, right) => left.display_order - right.display_order);
 }
@@ -164,4 +187,14 @@ export function getLocalCandidates() {
 
 export async function resetLocalElectionState() {
   await writeLocalState(initialState());
+}
+
+export async function clearLocalElectionProgress() {
+  const state = await readLocalState();
+  await writeLocalState({
+    ...state,
+    electionStatus: "NOT_STARTED",
+    votes: [],
+    finalResult: null
+  });
 }

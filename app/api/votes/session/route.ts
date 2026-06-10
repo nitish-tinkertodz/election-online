@@ -10,8 +10,20 @@ export async function DELETE() {
     message: "Voting session cleared."
   });
 
-  response.cookies.delete(COMPLETED_ROLES_COOKIE);
-  response.cookies.delete(VOTE_SESSION_COOKIE);
+  response.cookies.set(COMPLETED_ROLES_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    expires: new Date(0)
+  });
+  response.cookies.set(VOTE_SESSION_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    expires: new Date(0)
+  });
 
   return response;
 }

@@ -97,6 +97,16 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
       items: candidates.filter((candidate) => candidate.role_id === role.id)
     }));
   }, [candidates, roles]);
+  const hasReadyBallot = useMemo(() => {
+    const activeRoleIds = new Set(
+      roles.filter((role) => role.status === "Active").map((role) => role.id)
+    );
+
+    return candidates.some(
+      (candidate) =>
+        candidate.status === "Active" && activeRoleIds.has(candidate.role_id)
+    );
+  }, [candidates, roles]);
 
   function editRole(role: Role) {
     setError("");
@@ -173,6 +183,27 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
     startTransition(() => router.refresh());
   }
 
+  async function closeBallot() {
+    setError("");
+    setMessage("");
+
+    await saveJson("/api/election/close", "POST", {});
+    setMessage("Ballot closed. Loading official results...");
+    startTransition(() => {
+      router.push("/results");
+      router.refresh();
+    });
+  }
+
+  async function resetElectionState() {
+    setError("");
+    setMessage("");
+
+    await saveJson("/api/election/reset", "POST", {});
+    setMessage("Election reset. Votes and results were cleared.");
+    startTransition(() => router.refresh());
+  }
+
   return (
     <div className="space-y-6">
       <section className="rounded-[2rem] border border-ink/10 bg-white/80 p-8 shadow-card backdrop-blur">
@@ -188,19 +219,57 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
               Admin setup enabled while not open
             </div>
             {status === "OPEN" ? (
-              <div className="rounded-full border border-forest/15 bg-forest/10 px-4 py-2 text-sm font-semibold text-forest">
-                Ballot is open
-              </div>
+              <>
+                <div className="rounded-full border border-forest/15 bg-forest/10 px-4 py-2 text-sm font-semibold text-forest">
+                  Ballot is open
+                </div>
+                <button
+                  type="button"
+                  onClick={closeBallot}
+                  disabled={isPending}
+                  className="rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold text-ink transition hover:border-ink/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isPending ? "Closing..." : "Close ballot"}
+                </button>
+              </>
             ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={startBallot}
+                  disabled={isPending || !hasReadyBallot}
+                  className="rounded-full bg-forest px-4 py-2 text-sm font-semibold text-cream transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isPending ? "Starting..." : "Start ballot"}
+                </button>
+                {!hasReadyBallot ? (
+                  <p className="text-sm text-ink/65">
+                    Add an active candidate before opening the ballot.
+                  </p>
+                ) : null}
+              </>
+            )}
+            {status === "CLOSED" ? (
               <button
                 type="button"
-                onClick={startBallot}
-                disabled={isPending}
-                className="rounded-full bg-forest px-4 py-2 text-sm font-semibold text-cream transition hover:opacity-90 disabled:opacity-60"
+                onClick={() => {
+                  startTransition(() => {
+                    router.push("/results");
+                  });
+                }}
+                className="rounded-full border border-forest/20 bg-forest/10 px-4 py-2 text-sm font-semibold text-forest transition hover:border-forest/40"
               >
-                {isPending ? "Starting..." : "Start ballot"}
+                View results
               </button>
-            )}
+            ) : null}
+            <button
+              type="button"
+              onClick={resetElectionState}
+              disabled={isPending}
+              className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:border-red-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? "Resetting..." : "Reset election"}
+            </button>
           </div>
         </div>
         {message ? <p className="mt-4 text-sm text-forest">{message}</p> : null}

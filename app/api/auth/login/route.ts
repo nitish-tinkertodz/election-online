@@ -15,6 +15,16 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/admin?error=invalid-password", request.url));
   }
 
-  await setAdminSession();
-  return NextResponse.redirect(new URL(nextPath, request.url));
+  try {
+    await setAdminSession(request.headers);
+    return NextResponse.redirect(new URL(nextPath, request.url));
+  } catch (error) {
+    const reason =
+      error instanceof Error &&
+      error.message.includes("already open on another device")
+        ? "admin-session-active"
+        : "login-failed";
+
+    return NextResponse.redirect(new URL(`/admin?error=${reason}`, request.url));
+  }
 }

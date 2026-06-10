@@ -1,6 +1,8 @@
 import { execute, queryFirst } from "@/lib/db";
 import { getBindings } from "@/lib/db/platform";
+import { hasReadyBallot } from "@/lib/election/ballot-readiness";
 import {
+  clearLocalElectionProgress,
   clearLocalFinalResult,
   getLocalElectionStatus,
   setLocalFinalResult,
@@ -41,6 +43,11 @@ export async function getElectionStatus() {
 }
 
 export async function openElection() {
+  const readyBallot = await hasReadyBallot();
+  if (!readyBallot) {
+    throw new Error("Add at least one active candidate before opening the ballot.");
+  }
+
   if (!getBindings().DB) {
     const currentStatus = await getLocalElectionStatus();
     if (!canOpenElection(currentStatus)) {
@@ -145,4 +152,39 @@ export async function resetLocalElection() {
   if (!getBindings().DB) {
     await resetLocalElectionState();
   }
+}
+
+export async function resetElection() {
+  if (!getBindings().DB) {
+    await clearLocalElectionProgress();
+    return {
+      status: "NOT_STARTED" as const,
+      cleared_votes: true,
+      cleared_results: true
+    };
+  }
+
+  const now = new Date().toISOString();
+
+  await execute(getBindings(), "DELETE FROM votes;");
+  await execute(getBindings(), "DELETE FROM vote_sessions;");
+  await execute(getBindings(), "DELETE FROM election_results;");
+  await execute(
+    getBindings(),
+    `UPDATE elections
+     SET status = ?, started_at = NULL, closed_at = NULL, updated_at = ?
+     WHERE id = ?;`,
+    ["NOT_STARTED", now, "default-election"]
+  );
+  await execute(
+    getBindings(),
+    "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?);",
+    ["election_status", "NOT_STARTED"]
+  );
+
+  return {
+    status: "NOT_STARTED" as const,
+    cleared_votes: true,
+    cleared_results: true
+  };
 }
