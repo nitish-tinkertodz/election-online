@@ -22,6 +22,8 @@ export type LocalCandidate = {
 
 type LocalStateSnapshot = {
   electionStatus: ElectionStatus;
+  roles: LocalRole[];
+  candidates: LocalCandidate[];
   votes: LocalVoteRecord[];
   finalResult: LocalFinalResultSnapshot | null;
 };
@@ -41,84 +43,15 @@ export type LocalFinalResultSnapshot = {
 
 const initialState = (): LocalStateSnapshot => ({
   electionStatus: "NOT_STARTED",
+  roles: [...localRoles],
+  candidates: [...localCandidates],
   votes: [],
   finalResult: null
 });
 
-const localRoles: LocalRole[] = [
-  {
-    id: "role_school_leader",
-    name: "School Leader",
-    description: "Represents the school community.",
-    display_order: 1,
-    status: "Active"
-  },
-  {
-    id: "role_sports_captain",
-    name: "Sports Captain",
-    description: "Leads school sports culture and participation.",
-    display_order: 2,
-    status: "Active"
-  },
-  {
-    id: "role_arts_captain",
-    name: "Arts Captain",
-    description: "Represents arts, culture, and performance.",
-    display_order: 3,
-    status: "Active"
-  }
-];
+const localRoles: LocalRole[] = [];
 
-const localCandidates: LocalCandidate[] = [
-  {
-    id: "candidate_a",
-    role_id: "role_school_leader",
-    name: "Aanya Rao",
-    class_name: "10A",
-    photo_url: "",
-    status: "Active"
-  },
-  {
-    id: "candidate_b",
-    role_id: "role_school_leader",
-    name: "Rohan Mehta",
-    class_name: "10B",
-    photo_url: "",
-    status: "Active"
-  },
-  {
-    id: "candidate_c",
-    role_id: "role_sports_captain",
-    name: "Kabir Singh",
-    class_name: "9C",
-    photo_url: "",
-    status: "Active"
-  },
-  {
-    id: "candidate_d",
-    role_id: "role_sports_captain",
-    name: "Mira Patel",
-    class_name: "9A",
-    photo_url: "",
-    status: "Active"
-  },
-  {
-    id: "candidate_e",
-    role_id: "role_arts_captain",
-    name: "Sara Joseph",
-    class_name: "8B",
-    photo_url: "",
-    status: "Active"
-  },
-  {
-    id: "candidate_f",
-    role_id: "role_arts_captain",
-    name: "Neil Thomas",
-    class_name: "8C",
-    photo_url: "",
-    status: "Active"
-  }
-];
+const localCandidates: LocalCandidate[] = [];
 
 function getLocalStatePath() {
   return path.join(process.cwd(), ".local-dev", "election-state.json");
@@ -166,6 +99,32 @@ export async function appendLocalVote(vote: LocalVoteRecord) {
   await writeLocalState({
     ...state,
     votes: [...state.votes, vote]
+  });
+}
+
+export async function getLocalRolesState() {
+  const state = await readLocalState();
+  return [...state.roles].sort((left, right) => left.display_order - right.display_order);
+}
+
+export async function setLocalRolesState(roles: LocalRole[]) {
+  const state = await readLocalState();
+  await writeLocalState({
+    ...state,
+    roles: [...roles].sort((left, right) => left.display_order - right.display_order)
+  });
+}
+
+export async function getLocalCandidatesState() {
+  const state = await readLocalState();
+  return [...state.candidates];
+}
+
+export async function setLocalCandidatesState(candidates: LocalCandidate[]) {
+  const state = await readLocalState();
+  await writeLocalState({
+    ...state,
+    candidates: [...candidates]
   });
 }
 

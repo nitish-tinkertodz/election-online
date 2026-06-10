@@ -12,9 +12,9 @@
 
 **Purpose**: Confirm the feature branch structure and shared documentation context for implementation
 
-- [ ] T001 Confirm the feature plan and design docs are present in `specs/002-admin-voting-fixes/` and align the implementation scope with `plan.md`
-- [ ] T002 [P] Review the current admin and voting route structure in `app/admin/page.tsx`, `app/vote/page.tsx`, and `app/api/roles/route.ts` to map the affected surfaces
-- [ ] T003 [P] Review the shared election and candidate domain modules in `lib/election/`, `lib/votes/`, and `lib/roles/` to identify the setup and gating touchpoints
+- [x] T001 Confirm the feature plan and design docs are present in `specs/002-admin-voting-fixes/` and align the implementation scope with `plan.md`
+- [x] T002 [P] Review the current admin and voting route structure in `app/admin/page.tsx`, `app/vote/page.tsx`, and `app/api/roles/route.ts` to map the affected surfaces
+- [x] T003 [P] Review the shared election and candidate domain modules in `lib/election/`, `lib/votes/`, and `lib/roles/` to identify the setup and gating touchpoints
 
 ---
 
@@ -22,10 +22,10 @@
 
 **Purpose**: Shared groundwork required before any user story can be completed
 
-- [ ] T004 Define the admin role and candidate management contract expectations in `specs/002-admin-voting-fixes/contracts/api.md` against the existing admin routes
-- [ ] T005 Define the election-start gating expectations for `/vote` and vote submission in `specs/002-admin-voting-fixes/contracts/api.md`
-- [ ] T006 Define the role-card layout expectations for five or more candidates in `specs/002-admin-voting-fixes/data-model.md` and `specs/002-admin-voting-fixes/quickstart.md`
-- [ ] T007 Validate that the current election-state and session rules in `lib/election/status.ts` and `lib/election/session.ts` support the new gating behavior without changing the core lifecycle model
+- [x] T004 Define the admin role and candidate management contract expectations in `specs/002-admin-voting-fixes/contracts/api.md` against the existing admin routes
+- [x] T005 Define the election-start gating expectations for `/vote` and vote submission in `specs/002-admin-voting-fixes/contracts/api.md`
+- [x] T006 Define the role-card layout expectations for five or more candidates in `specs/002-admin-voting-fixes/data-model.md` and `specs/002-admin-voting-fixes/quickstart.md`
+- [x] T007 Validate that the current election-state and session rules in `lib/election/status.ts` and `lib/election/session.ts` support the new gating behavior without changing the core lifecycle model
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -39,12 +39,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Restore role creation and editing in `app/admin/page.tsx` so authenticated administrators can add election roles
-- [ ] T009 [P] [US1] Restore candidate creation and assignment in `app/admin/page.tsx` so authenticated administrators can add candidates to an existing role
-- [ ] T010 [US1] Wire admin role persistence through the existing role repository in `lib/roles/role-repository.ts`
-- [ ] T011 [US1] Wire admin candidate persistence through the existing candidate repository in `lib/candidates/candidate-repository.ts`
-- [ ] T012 [US1] Reinstate setup validation and user-facing error handling for role and candidate creation in `lib/validation/` and the admin UI components under `components/admin/`
-- [ ] T013 [US1] Ensure the admin page shows freshly created and edited roles or candidates immediately after save in `app/admin/page.tsx`
+- [x] T008 [P] [US1] Restore role creation and editing in `app/admin/page.tsx` so authenticated administrators can add election roles
+- [x] T009 [P] [US1] Restore candidate creation and assignment in `app/admin/page.tsx` so authenticated administrators can add candidates to an existing role
+- [x] T010 [US1] Wire admin role persistence through the existing role repository in `lib/roles/role-repository.ts`
+- [x] T011 [US1] Wire admin candidate persistence through the existing candidate repository in `lib/candidates/candidate-repository.ts`
+- [x] T012 [US1] Reinstate setup validation and user-facing error handling for role and candidate creation in `lib/validation/` and the admin UI components under `components/admin/`
+- [x] T013 [US1] Ensure the admin page shows freshly created and edited roles or candidates immediately after save in `app/admin/page.tsx`
 
 **Checkpoint**: User Story 1 should now be fully functional and testable independently
 
@@ -58,10 +58,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [P] [US2] Update the vote page gating logic in `app/vote/page.tsx` so unopened elections show a disabled state instead of a live ballot
-- [ ] T015 [P] [US2] Enforce the not-started gate in vote submission handling in `app/api/votes/route.ts` and `lib/votes/vote-service.ts`
-- [ ] T016 [US2] Ensure election status checks used by the voter portal stay aligned with the admin open action in `app/api/election/status/route.ts` and `lib/election/election-service.ts`
-- [ ] T017 [US2] Update the voter-facing state messaging in `components/vote/vote-state-message.tsx` so unopened elections are clearly explained to voters
+- [x] T014 [P] [US2] Update the vote page gating logic in `app/vote/page.tsx` so unopened elections show a disabled state instead of a live ballot
+- [x] T015 [P] [US2] Enforce the not-started gate in vote submission handling in `app/api/votes/route.ts` and `lib/votes/vote-service.ts`
+- [x] T016 [US2] Ensure election status checks used by the voter portal stay aligned with the admin open action in `app/api/election/status/route.ts` and `lib/election/election-service.ts`
+- [x] T017 [US2] Update the voter-facing state messaging in `components/vote/vote-state-message.tsx` so unopened elections are clearly explained to voters
 
 **Checkpoint**: User Story 2 should now be fully functional and testable independently
 
@@ -75,11 +75,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T018 [P] [US3] Rework the candidate card layout in `components/vote/role-card.tsx` so a role can display five candidates cleanly
-- [ ] T019 [P] [US3] Add responsive wrapping and spacing behavior for candidate groups in `components/vote/vote-flow.tsx`
-- [ ] T020 [US3] Update ballot rendering rules in `lib/votes/vote-service.ts` so roles with more than five candidates still map into a readable vote flow
-- [ ] T021 [US3] Adjust the vote page guidance copy in `app/vote/page.tsx` and `components/vote/vote-state-message.tsx` to match the wrapped multi-candidate layout
-- [ ] T022 [US3] Verify the role-card entity expectations in `specs/002-admin-voting-fixes/data-model.md` and quickstart steps in `specs/002-admin-voting-fixes/quickstart.md` reflect the five-candidate layout target
+- [x] T018 [P] [US3] Rework the candidate card layout in `components/vote/role-card.tsx` so a role can display five candidates cleanly
+- [x] T019 [P] [US3] Add responsive wrapping and spacing behavior for candidate groups in `components/vote/vote-flow.tsx`
+- [x] T020 [US3] Update ballot rendering rules in `lib/votes/vote-service.ts` so roles with more than five candidates still map into a readable vote flow
+- [x] T021 [US3] Adjust the vote page guidance copy in `app/vote/page.tsx` and `components/vote/vote-state-message.tsx` to match the wrapped multi-candidate layout
+- [x] T022 [US3] Verify the role-card entity expectations in `specs/002-admin-voting-fixes/data-model.md` and quickstart steps in `specs/002-admin-voting-fixes/quickstart.md` reflect the five-candidate layout target
 
 **Checkpoint**: User Story 3 should now be fully functional and testable independently
 
@@ -89,10 +89,10 @@
 
 **Purpose**: Final verification and cleanup that touches multiple stories
 
-- [ ] T023 [P] Verify end-to-end admin setup, vote gating, and role-card wrapping against `specs/002-admin-voting-fixes/quickstart.md`
-- [ ] T024 [P] Review affected UI states in `components/admin/`, `components/vote/`, and `app/admin/page.tsx` for consistency and copy clarity
-- [ ] T025 Validate that protected admin flows and public voter flows still follow the project rules documented in `specs/002-admin-voting-fixes/contracts/api.md`
-- [ ] T026 Confirm that `tasks.md`, `plan.md`, and `spec.md` remain aligned after implementation scoping and mark any follow-up gaps for later planning
+- [X] T023 [P] Verify end-to-end admin setup, vote gating, and role-card wrapping against `specs/002-admin-voting-fixes/quickstart.md`
+- [X] T024 [P] Review affected UI states in `components/admin/`, `components/vote/`, and `app/admin/page.tsx` for consistency and copy clarity
+- [X] T025 Validate that protected admin flows and public voter flows still follow the project rules documented in `specs/002-admin-voting-fixes/contracts/api.md`
+- [X] T026 Confirm that `tasks.md`, `plan.md`, and `spec.md` remain aligned after implementation scoping and mark any follow-up gaps for later planning
 
 ---
 

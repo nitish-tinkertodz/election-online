@@ -27,11 +27,11 @@ export function RoleCard({ role }: RoleCardProps) {
         </p>
       </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {role.candidates.map((candidate) => (
           <label
             key={candidate.id}
-            className="group flex cursor-pointer gap-4 rounded-[1.75rem] border border-ink/10 bg-cream/70 p-4 transition hover:border-ember hover:bg-white"
+            className="group flex h-full cursor-pointer gap-4 rounded-[1.75rem] border border-ink/10 bg-cream/70 p-4 transition hover:border-ember hover:bg-white"
           >
             <input
               type="radio"
@@ -40,12 +40,12 @@ export function RoleCard({ role }: RoleCardProps) {
               className="mt-2 h-4 w-4 border-ink text-ember focus:ring-ember"
               required
             />
-            <div className="flex min-w-0 flex-1 gap-4">
-              <div className="flex h-20 w-20 flex-none items-center justify-center rounded-[1.4rem] border border-dashed border-ink/15 bg-white text-[10px] uppercase tracking-[0.22em] text-ink/50">
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+              <div className="flex h-20 w-full items-center justify-center rounded-[1.4rem] border border-dashed border-ink/15 bg-white text-[10px] uppercase tracking-[0.22em] text-ink/50 sm:h-24">
                 {candidate.photo_url ? "Photo" : "Placeholder"}
               </div>
               <div className="min-w-0">
-                <h2 className="font-display text-2xl text-ink">
+                <h2 className="break-words font-display text-2xl text-ink">
                   {candidate.name}
                 </h2>
                 <p className="mt-2 text-sm text-ink/68">{candidate.class_name}</p>

@@ -22,8 +22,8 @@ export default async function VotePage() {
       <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-16">
         <VoteStateMessage
           eyebrow="Voter Portal"
-          title="Voting has not started yet."
-          description="The role-by-role voting flow will appear here as soon as the admin opens the election."
+          title="Voting is not open yet."
+          description="The ballot stays disabled until an administrator starts the election."
         />
       </main>
     );

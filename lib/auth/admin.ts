@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 
-const ADMIN_COOKIE = "admin_session";
+export const ADMIN_SESSION_COOKIE = "admin_session";
 const DEFAULT_ADMIN_PASSWORD = "12345678";
 
 export function getAdminPassword() {
@@ -11,12 +11,12 @@ export function getAdminPassword() {
 
 export async function isAdminAuthenticated() {
   const cookieStore = await cookies();
-  return cookieStore.get(ADMIN_COOKIE)?.value === "authenticated";
+  return cookieStore.get(ADMIN_SESSION_COOKIE)?.value === "authenticated";
 }
 
 export async function setAdminSession() {
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, "authenticated", {
+  cookieStore.set(ADMIN_SESSION_COOKIE, "authenticated", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -26,7 +26,7 @@ export async function setAdminSession() {
 
 export async function clearAdminSession() {
   const cookieStore = await cookies();
-  cookieStore.delete(ADMIN_COOKIE);
+  cookieStore.delete(ADMIN_SESSION_COOKIE);
 }
 
 export async function requireAdminAccess(nextPath = "/admin") {

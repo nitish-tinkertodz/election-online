@@ -1,5 +1,11 @@
 import { isAdminAuthenticated } from "@/lib/auth/admin";
 import { getElectionStatus } from "@/lib/election/election-service";
+import {
+  listCandidates,
+  type CandidateRecord
+} from "@/lib/candidates/candidate-repository";
+import { listRoles, type RoleRecord } from "@/lib/roles/role-repository";
+import { AdminDashboard } from "@/components/admin/admin-dashboard";
 
 type AdminPageProps = {
   searchParams?: Promise<{
@@ -58,9 +64,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     );
   }
 
+  const [roles, candidates]: [RoleRecord[], CandidateRecord[]] = await Promise.all([
+    listRoles(),
+    listCandidates()
+  ]);
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-16">
-      <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+      <section className="mb-8 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
         <div className="rounded-[2rem] border border-ink/10 bg-white/80 p-10 shadow-card backdrop-blur">
           <p className="font-body text-sm uppercase tracking-[0.3em] text-ember">
             Admin Dashboard
@@ -69,9 +80,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             Shape the ballot, then open the room.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-ink/72">
-            This dashboard is now protected and ready for role, candidate,
-            branding, and election lifecycle wiring on top of the shared admin
-            access flow.
+            Create and manage roles and candidates here before starting the election.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <span className="rounded-full border border-forest/15 bg-forest/10 px-4 py-2 text-sm font-semibold text-forest">
@@ -101,34 +110,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </form>
         </div>
       </section>
-      <section className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            title: "Roles",
-            description: "Create, order, and manage election positions."
-          },
-          {
-            title: "Candidates",
-            description: "Manage candidate details, photos, and active status."
-          },
-          {
-            title: "Branding",
-            description: "Control school identity, logo, and public-facing feel."
-          },
-          {
-            title: "Election lifecycle",
-            description: "Open and close the election with final snapshot protection."
-          }
-        ].map((panel) => (
-          <article
-            key={panel.title}
-            className="rounded-[1.75rem] border border-ink/10 bg-white/70 p-6 shadow-card backdrop-blur"
-          >
-            <h2 className="font-display text-2xl text-ink">{panel.title}</h2>
-            <p className="mt-3 text-sm leading-6 text-ink/68">{panel.description}</p>
-          </article>
-        ))}
-      </section>
+
+      <AdminDashboard
+        roles={roles}
+        candidates={candidates}
+        status={status}
+      />
     </main>
   );
 }

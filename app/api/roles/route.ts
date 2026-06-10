@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAdminApiAccess } from "@/lib/auth/admin";
-import { createRole, listRoles } from "@/lib/roles/role-repository";
+import { createRole, listRoles, updateRole } from "@/lib/roles/role-repository";
 
 export async function GET() {
   try {
@@ -32,6 +32,33 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Unable to create role." },
+      { status: 400 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const unauthorized = await requireAdminApiAccess();
+    if (unauthorized) {
+      return unauthorized;
+    }
+
+    const payload = await request.json();
+    const { id, ...input } = payload as { id?: string } & Parameters<typeof createRole>[0];
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "Role id is required for updates." },
+        { status: 400 }
+      );
+    }
+
+    const role = await updateRole(id, input);
+    return NextResponse.json({ item: role });
+  } catch (error) {
+    return NextResponse.json(
+      { message: error instanceof Error ? error.message : "Unable to update role." },
       { status: 400 }
     );
   }
