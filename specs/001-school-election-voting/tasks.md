@@ -7,11 +7,11 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Initialize the Next.js + Cloudflare project structure and shared configuration.
+**Purpose**: Initialize the Next.js local-network project structure and shared configuration.
 
 - [X] T001 Create the Next.js project scaffold and base folders in `package.json`, `tsconfig.json`, `next.config.ts`, `app/`, `components/`, `lib/`, `db/`, `tests/`, and `public/`
 - [X] T002 Add Tailwind CSS and global app styling in `tailwind.config.ts`, `postcss.config.js`, and `app/globals.css`
-- [X] T003 Configure Cloudflare deployment and environment bindings in `wrangler.toml` and `.dev.vars.example`
+- [X] T003 Configure local-network startup and environment guidance in `README.md`
 - [X] T004 Add shared TypeScript path aliases and lint/build scripts in `package.json` and `tsconfig.json`
 
 ---
@@ -20,9 +20,9 @@
 
 **Purpose**: Establish the data model, server utilities, and route structure required by every user story.
 
-- [X] T005 Create the initial D1 schema and migration files for elections, roles, candidates, votes, vote sessions, result snapshots, settings, and audit logs in `db/migrations/`
-- [X] T006 Seed baseline election settings and placeholder branding data in `db/seed/seed.ts`
-- [X] T007 Build the shared D1 access layer and query helpers in `lib/db/`
+- [X] T005 Create the file-backed election state model for roles, candidates, votes, result snapshots, settings, and admin session state in `lib/election/local-store.ts`
+- [X] T006 Seed baseline election settings and placeholder branding through the local store defaults
+- [X] T007 Build serialized atomic local-state updates in `lib/election/local-store.ts`
 - [X] T008 Build the anonymous browser-session helper for vote progress tracking in `lib/election/session.ts`
 - [X] T009 Build shared election-state utilities and transition guards in `lib/election/status.ts`
 - [X] T010 Build shared validation schemas for roles, candidates, election status, votes, and branding in `lib/validation/`
@@ -44,7 +44,7 @@
 - [X] T013 [P] [US1] Implement shared-password admin session checks and protected-page redirects in `lib/auth/admin.ts` and `app/admin/layout.tsx`
 - [X] T014 [P] [US1] Implement role management persistence and ordering in `lib/roles/role-repository.ts` and `app/api/roles/route.ts`
 - [X] T015 [P] [US1] Implement candidate CRUD persistence with role assignment in `lib/candidates/candidate-repository.ts` and `app/api/candidates/route.ts`
-- [X] T016 [P] [US1] Implement candidate photo upload and replace flow with R2 storage in `lib/storage/photos.ts` and `app/api/candidates/[candidateId]/photo/route.ts`
+- [X] T016 [P] [US1] Implement candidate photo upload and replace flow with local filesystem storage in `lib/storage/photos.ts` and `app/api/candidates/[candidateId]/photo/route.ts`
 - [X] T017 [US1] Implement election start/stop controls and atomic close workflow in `lib/election/election-service.ts` and `app/api/election/open/route.ts`
 - [X] T018 [US1] Implement final results snapshot generation and archival persistence in `lib/results/finalize-election.ts` and `app/api/election/close/route.ts`
 - [X] T019 [US1] Build the admin dashboard UI with role, candidate, branding, and election controls in `app/admin/page.tsx`
@@ -102,7 +102,7 @@
 
 - [X] T037 Harden server-side authorization and error handling across `app/api/` and `app/*/page.tsx`
 - [X] T038 Add empty, loading, and failure states for admin, voting, and results screens in `components/shared/`
-- [X] T039 Verify D1 migration and seed scripts against the quickstart flow in `db/migrations/`, `db/seed/seed.ts`, and `specs/001-school-election-voting/quickstart.md`
+- [X] T039 Verify local state initialization against the quickstart flow in `lib/election/local-store.ts` and `specs/001-school-election-voting/quickstart.md`
 - [X] T040 Review and align implementation notes with the API contract in `specs/001-school-election-voting/contracts/api.md`
 - [X] T041 Run a final cleanup pass on shared election utilities in `lib/`
 

@@ -3,18 +3,18 @@
 ## 1) Frontend and server runtime
 
 - **Decision**: Use Next.js App Router with TypeScript and React.
-- **Rationale**: The feature needs exactly three routed pages, server-side protected-page checks, and route-backed APIs. Next.js keeps page routing, server logic, and shared components in one codebase while remaining compatible with Cloudflare deployment targets.
+- **Rationale**: The feature needs exactly three routed pages, server-side protected-page checks, and route-backed APIs. Next.js keeps page routing, server logic, and shared components in one process that can serve every machine on the local network.
 - **Alternatives considered**:
   - SPA + separate backend: workable, but it adds a second deployment surface and makes server-side page protection less direct.
   - Flutter web: acceptable for UI, but it is a poorer fit for route-level server protection and API-heavy admin workflows in this repo.
 
 ## 2) Data storage
 
-- **Decision**: Use Cloudflare D1 for election data and Cloudflare R2 for candidate photos.
-- **Rationale**: The spec explicitly calls for Cloudflare deployment planning and D1 migrations. D1 supports relational constraints and transactional stop-election processing, while R2 handles image files without bloating relational rows.
+- **Decision**: Use serialized atomic JSON file updates for election data and the local filesystem for candidate photos.
+- **Rationale**: The election runs from one host machine on a small local network. A single file-backed state store keeps setup simple, while serialized mutations prevent concurrent voter submissions from overwriting each other.
 - **Alternatives considered**:
-  - PostgreSQL + object storage: strong general-purpose choice, but it does not match the Cloudflare-native deployment direction called out by the feature.
-  - SQLite files only: too fragile for concurrent writes and immutable final-result snapshots.
+  - PostgreSQL + object storage: strong general-purpose choice, but unnecessary for the three-machine local deployment.
+  - Unserialized JSON writes: rejected because simultaneous voter submissions could overwrite each other.
 
 ## 3) Anonymous voting session tracking
 

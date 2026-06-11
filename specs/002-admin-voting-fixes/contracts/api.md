@@ -21,6 +21,13 @@
 - Returns the current election state.
 - Used by the vote page to decide whether the ballot should be enabled.
 
+### `GET /api/election/events`
+
+- Public server-sent event stream used by loaded voter pages.
+- Accepts the currently rendered election status as the `status` query parameter.
+- Emits a `status` event only when the server observes a different election status.
+- Voter clients refresh their server-rendered ballot state after receiving a changed status.
+
 ### `POST /api/election/open`
 
 - Opens the election explicitly.

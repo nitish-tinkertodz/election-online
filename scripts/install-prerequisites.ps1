@@ -70,14 +70,8 @@ if (-not $nodeMajor -or $nodeMajor -lt $requiredNodeMajor) {
 
 Write-Step "Using Node.js major version $nodeMajor"
 
-Write-Step "Installing npm dependencies (Next.js, React, TypeScript, Wrangler, and others)"
+Write-Step "Installing npm dependencies"
 Invoke-StepCommand -Command "npm" -Arguments @("install") -FailureMessage "npm install failed."
 
-Write-Step "Applying local D1 migrations"
-Invoke-StepCommand -Command "npm" -Arguments @("run", "db:migrate") -FailureMessage "Database migration failed."
-
-Write-Step "Seeding local D1 database"
-Invoke-StepCommand -Command "npm" -Arguments @("run", "db:seed") -FailureMessage "Database seed failed."
-
 Write-Step "Prerequisites installed successfully"
-Write-Host "Run 'npm run dev' to start the app."
+Write-Host "Run 'npm run dev -- --hostname 0.0.0.0' to start the app for other devices on the network."

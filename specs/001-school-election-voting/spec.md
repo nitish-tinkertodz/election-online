@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Create a complete Speckit specification for a browser-based school election voting system with an admin dashboard, voting portal, live results dashboard, candidate management, school branding, candidate photo uploads, clear route and API requirements, data constraints, validation, security, error handling, responsive web UI requirements, Cloudflare deployment expectations, and GitHub-ready delivery. Update the candidate-management requirements so administrators can manage candidate name, class details, election role or position, candidate photo with visible placeholder behavior, optional active or inactive status, add/edit-delete flows, preview candidate cards before saving, and required candidate validation. Constrain the application to exactly three main pages: an admin-only `/admin` page, a voter-facing `/vote` page, and an admin-only `/results` page with server-side protected-page checks and no results visibility for voters. Replace any fixed-position assumptions with admin-defined election roles, support role management from the admin page, require candidates to belong to exactly one admin-defined role, support multi-role voting in a guided role-by-role card flow, add explicit election lifecycle control with `NOT_STARTED`, `OPEN`, and `CLOSED` states, restrict the voting interface to `OPEN` only, require the stop-election flow to atomically generate and preserve an official final results snapshot, save each role vote immediately after the voter confirms it, and simplify the current version by removing admission-number entry, voter identity tracking, voter-table validation, and cross-system duplicate prevention."
+**Input**: Browser-based school election voting system for one admin machine and two voter machines on the same local network, with an admin dashboard, voting portal, live results dashboard, candidate management, school branding, candidate photo uploads, validation, security, responsive UI requirements, and GitHub-ready delivery.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -190,7 +190,7 @@ The system must provide a browser-based election platform for schools that suppo
 - **FR-030**: System MUST retain an auditable record of key election-management actions such as opening and closing the election, candidate changes, and branding updates.
 - **FR-031**: System MUST provide graceful empty states when no candidates, no votes, or no branding assets are available.
 - **FR-032**: System MUST prevent student voters and other unauthorized users from accessing administrator-only data, actions, or results.
-- **FR-033**: System MUST support repository organization and deployment documentation sufficient for GitHub-based delivery and Cloudflare deployment planning.
+- **FR-033**: System MUST support repository organization and deployment documentation sufficient for GitHub-based delivery and local-network operation.
 - **FR-034**: System MUST provide a candidate form that supports both new candidate creation and editing of existing candidate details from the administration dashboard.
 - **FR-035**: System MUST let administrators preview a candidate card before saving changes.
 - **FR-036**: System MUST validate candidate name, class details, and contesting role before saving candidate changes.
@@ -229,7 +229,7 @@ The system must provide a browser-based election platform for schools that suppo
 - **NFR-007**: Sensitive validation responses MUST avoid revealing unnecessary personal information.
 - **NFR-008**: Error messages MUST be understandable to non-technical users and distinguish between validation issues and temporary system failures.
 - **NFR-009**: The interface MUST maintain clear branding and visual consistency across the administration, voting, and results experiences.
-- **NFR-010**: The solution MUST be organized so it can be deployed and maintained through a GitHub-hosted codebase and Cloudflare-hosted web delivery platform.
+- **NFR-010**: The solution MUST be organized so it can be deployed and maintained through a GitHub-hosted codebase and one local Node.js host machine.
 - **NFR-011**: Protected-page authorization decisions for `/admin` and `/results` MUST be enforced before protected page content is revealed.
 - **NFR-012**: Election lifecycle state changes and final result recording MUST leave the system in a consistent state even if errors occur during stop-election processing.
 
@@ -422,14 +422,14 @@ The application has exactly three main pages: `/admin`, `/vote`, and `/results`.
 - Final results snapshots must remain unchanged after closure unless an explicit administrator-approved reset or recount workflow is introduced.
 - Election status changes must not alter historical vote records.
 
-### Cloudflare D1 Migrations
+### Local State Storage
 
 - The solution must define repeatable schema-creation steps for roles, candidates, votes, election result snapshots, and settings.
-- The solution must define migration steps for storing official final results separately from live vote records.
+- The solution must store official final results separately from live vote records.
 - The solution must include a way to seed or import initial branding or status settings.
-- The solution must describe how schema changes will be versioned and applied consistently across environments.
+- The solution must keep backward-compatible defaults when new local state fields are introduced.
 
-### Cloudflare R2 Storage Design
+### Local Photo Storage Design
 
 - Candidate photos must be stored separately from structured election records, with only the photo reference attached to the candidate record.
 - Photo upload and candidate record update must behave as a coordinated workflow so the system does not leave broken photo references.
@@ -560,5 +560,5 @@ The application has exactly three main pages: `/admin`, `/vote`, and `/results`.
 - Admission-number-based access control, cross-system duplicate prevention, and voter audit trails are deferred to a future version.
 - A single election instance has one official final results snapshot for each completed closure event unless a future reset or recount feature is explicitly introduced.
 - The initial release supports a single school election context at a time.
-- Deployment will target Cloudflare-hosted web delivery and use a GitHub repository as the primary source-control system.
-- The application database is provisioned through the project’s Cloudflare D1 configuration and initialized through the migration and seed setup during local and Cloudflare development.
+- Deployment will target one Node.js host on the school local network and use a GitHub repository as the primary source-control system.
+- Election state and candidate photos are initialized and stored under `.local-dev/` on the host machine.

@@ -12,9 +12,9 @@ Build a browser-based school election platform with exactly three pages, admin-o
 
 - **Frontend / App Framework**: Next.js
 - **Styling**: Tailwind CSS
-- **Hosting / Runtime**: Cloudflare Pages and Cloudflare Workers
-- **Primary Database**: Cloudflare D1
-- **Photo Storage**: Cloudflare R2
+- **Hosting / Runtime**: Node.js on the local network host machine
+- **Primary Storage**: Atomic JSON file state on the host machine
+- **Photo Storage**: Local filesystem on the host machine
 - **Source Control**: GitHub
 - **Application Shape**: Route-driven web app with server-side authorization and API routes
 
@@ -22,13 +22,13 @@ Build a browser-based school election platform with exactly three pages, admin-o
 
 **Language/Version**: TypeScript 5.x
 
-**Primary Dependencies**: Next.js App Router, React, Cloudflare Pages/Workers runtime, Cloudflare D1, Cloudflare R2, Zod, Tailwind CSS
+**Primary Dependencies**: Next.js App Router, React, Node.js, Zod, Tailwind CSS
 
-**Storage**: Cloudflare D1 for election data and results, Cloudflare R2 for candidate photos, browser session cookie for anonymous vote-session tracking
+**Storage**: Atomic JSON file storage for election data and results, local filesystem candidate photos, browser session cookie for anonymous vote-session tracking
 
 **Testing**: Vitest, React Testing Library, Playwright
 
-**Target Platform**: Modern desktop and mobile browsers deployed on Cloudflare
+**Target Platform**: Modern desktop and mobile browsers connected to one local Node.js host
 
 **Project Type**: Web application
 
@@ -98,7 +98,7 @@ tests/
 contracts/
 ```
 
-**Structure Decision**: Implement the feature as a Next.js App Router web application with route-level server enforcement, API route handlers under `app/api`, shared domain logic in `lib`, D1 migrations in `db/migrations`, and end-to-end validation in `tests/e2e`.
+**Structure Decision**: Implement the feature as a Next.js App Router web application with route-level server enforcement, API route handlers under `app/api`, shared domain logic in `lib`, file-backed state in `lib/election/local-store.ts`, and end-to-end validation in `tests/e2e`.
 
 ## Complexity Tracking
 

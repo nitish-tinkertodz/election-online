@@ -4,7 +4,6 @@ import path from "node:path";
 
 import { requireAdminApiAccess } from "@/lib/auth/admin";
 import { updateCandidatePhotoUrl } from "@/lib/candidates/candidate-repository";
-import { getBindings } from "@/lib/db/platform";
 import { readLocalCandidatePhoto, storeCandidatePhoto } from "@/lib/storage/photos";
 
 export async function GET(
@@ -76,13 +75,7 @@ export async function POST(
   }
 
   try {
-    const result = await storeCandidatePhoto(
-      (getBindings() as typeof globalThis & {
-        CANDIDATE_PHOTOS?: { put: (...args: unknown[]) => Promise<unknown> };
-      }).CANDIDATE_PHOTOS,
-      candidateId,
-      photo
-    );
+    const result = await storeCandidatePhoto(candidateId, photo);
     await updateCandidatePhotoUrl(candidateId, result.photoUrl);
 
     return NextResponse.json({

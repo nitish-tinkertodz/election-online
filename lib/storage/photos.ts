@@ -3,14 +3,6 @@ import path from "node:path";
 
 import { photoUploadSchema } from "@/lib/validation";
 
-type R2BucketLike = {
-  put: (key: string, value: ArrayBuffer, options?: { httpMetadata?: { contentType?: string } }) => Promise<unknown>;
-};
-
-export function buildCandidatePhotoKey(candidateId: string, extension: string) {
-  return `candidates/${candidateId}/profile.${extension}`;
-}
-
 export function buildLocalPhotoPlaceholder(candidateId: string, extension: string) {
   void extension;
   return `/api/candidates/${candidateId}/photo`;
@@ -57,39 +49,20 @@ export function validatePhotoUpload(contentType: string, sizeInBytes: number) {
 }
 
 export async function storeCandidatePhoto(
-  bucket: R2BucketLike | undefined,
   candidateId: string,
   file: File
 ) {
   validatePhotoUpload(file.type, file.size);
 
   const extension = file.type.split("/")[1] || "jpg";
-  const key = buildCandidatePhotoKey(candidateId, extension);
+  const absoluteDir = getLocalCandidatePhotoDir(candidateId);
+  const absolutePath = path.join(absoluteDir, `profile.${extension}`);
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-  if (!bucket) {
-    const absoluteDir = getLocalCandidatePhotoDir(candidateId);
-    const absolutePath = path.join(absoluteDir, `profile.${extension}`);
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-
-    await mkdir(absoluteDir, { recursive: true });
-    await writeFile(absolutePath, fileBuffer);
-
-    return {
-      photoUrl: buildLocalPhotoPlaceholder(candidateId, extension),
-      storageMode: "local"
-    } as const;
-  }
-
-  const fileBuffer = await file.arrayBuffer();
-
-  await bucket.put(key, fileBuffer, {
-    httpMetadata: {
-      contentType: file.type
-    }
-  });
-
+  await mkdir(absoluteDir, { recursive: true });
+  await writeFile(absolutePath, fileBuffer);
   return {
-    photoUrl: key,
-    storageMode: "r2"
+    photoUrl: buildLocalPhotoPlaceholder(candidateId, extension),
+    storageMode: "local"
   } as const;
 }

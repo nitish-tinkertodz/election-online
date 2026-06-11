@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { ElectionStatus } from "@/lib/election/status";
@@ -22,6 +22,10 @@ export type LocalCandidate = {
 
 type LocalStateSnapshot = {
   electionStatus: ElectionStatus;
+  branding: {
+    school_name: string;
+    school_logo_url: string;
+  };
   roles: LocalRole[];
   candidates: LocalCandidate[];
   votes: LocalVoteRecord[];
@@ -52,6 +56,10 @@ export type LocalAdminSessionLock = {
 
 const initialState = (): LocalStateSnapshot => ({
   electionStatus: "NOT_STARTED",
+  branding: {
+    school_name: "School Election Voting System",
+    school_logo_url: ""
+  },
   roles: [...localRoles],
   candidates: [...localCandidates],
   votes: [],
@@ -88,7 +96,24 @@ async function readLocalState() {
 
 async function writeLocalState(nextState: LocalStateSnapshot) {
   await ensureLocalStateDir();
-  await writeFile(getLocalStatePath(), JSON.stringify(nextState, null, 2), "utf8");
+  const statePath = getLocalStatePath();
+  const temporaryPath = `${statePath}.${process.pid}.tmp`;
+  await writeFile(temporaryPath, JSON.stringify(nextState, null, 2), "utf8");
+  await rename(temporaryPath, statePath);
+}
+
+let mutationQueue = Promise.resolve();
+
+function updateLocalState(
+  update: (state: LocalStateSnapshot) => LocalStateSnapshot | Promise<LocalStateSnapshot>
+) {
+  const mutation = mutationQueue.then(async () => {
+    const state = await readLocalState();
+    await writeLocalState(await update(state));
+  });
+
+  mutationQueue = mutation.catch(() => {});
+  return mutation;
 }
 
 export async function getLocalElectionStatus() {
@@ -97,18 +122,22 @@ export async function getLocalElectionStatus() {
 }
 
 export async function setLocalElectionStatus(status: ElectionStatus) {
-  const state = await readLocalState();
-  await writeLocalState({
+  await updateLocalState((state) => ({
     ...state,
     electionStatus: status
-  });
+  }));
 }
 
 export async function appendLocalVote(vote: LocalVoteRecord) {
-  const state = await readLocalState();
-  await writeLocalState({
-    ...state,
-    votes: [...state.votes, vote]
+  await updateLocalState((state) => {
+    if (state.electionStatus !== "OPEN") {
+      throw new Error("Voting is not open.");
+    }
+
+    return {
+      ...state,
+      votes: [...state.votes, vote]
+    };
   });
 }
 
@@ -118,11 +147,10 @@ export async function getLocalRolesState() {
 }
 
 export async function setLocalRolesState(roles: LocalRole[]) {
-  const state = await readLocalState();
-  await writeLocalState({
+  await updateLocalState((state) => ({
     ...state,
     roles: [...roles].sort((left, right) => left.display_order - right.display_order)
-  });
+  }));
 }
 
 export async function getLocalCandidatesState() {
@@ -131,11 +159,10 @@ export async function getLocalCandidatesState() {
 }
 
 export async function setLocalCandidatesState(candidates: LocalCandidate[]) {
-  const state = await readLocalState();
-  await writeLocalState({
+  await updateLocalState((state) => ({
     ...state,
     candidates: [...candidates]
-  });
+  }));
 }
 
 export async function getLocalVotes() {
@@ -144,19 +171,43 @@ export async function getLocalVotes() {
 }
 
 export async function setLocalFinalResult(finalResult: LocalFinalResultSnapshot) {
-  const state = await readLocalState();
-  await writeLocalState({
+  await updateLocalState((state) => ({
     ...state,
     finalResult
+  }));
+}
+
+export async function closeLocalElection<T>(
+  buildFinalResult: () => Promise<{
+    storedResult: LocalFinalResultSnapshot;
+    response: T;
+  }>
+) {
+  let response: T | undefined;
+
+  await updateLocalState(async (state) => {
+    if (state.electionStatus !== "OPEN") {
+      throw new Error("Election can only be closed from OPEN.");
+    }
+
+    const finalResult = await buildFinalResult();
+    response = finalResult.response;
+
+    return {
+      ...state,
+      electionStatus: "CLOSED",
+      finalResult: finalResult.storedResult
+    };
   });
+
+  return response as T;
 }
 
 export async function clearLocalFinalResult() {
-  const state = await readLocalState();
-  await writeLocalState({
+  await updateLocalState((state) => ({
     ...state,
     finalResult: null
-  });
+  }));
 }
 
 export async function getLocalFinalResult() {
@@ -170,11 +221,22 @@ export async function getLocalAdminSessionLock() {
 }
 
 export async function setLocalAdminSessionLock(adminSessionLock: LocalAdminSessionLock | null) {
-  const state = await readLocalState();
-  await writeLocalState({
+  await updateLocalState((state) => ({
     ...state,
     adminSessionLock
-  });
+  }));
+}
+
+export async function getLocalBranding() {
+  const state = await readLocalState();
+  return state.branding;
+}
+
+export async function setLocalBranding(branding: LocalStateSnapshot["branding"]) {
+  await updateLocalState((state) => ({
+    ...state,
+    branding
+  }));
 }
 
 export function getLocalRoles() {
@@ -186,15 +248,14 @@ export function getLocalCandidates() {
 }
 
 export async function resetLocalElectionState() {
-  await writeLocalState(initialState());
+  await updateLocalState(() => initialState());
 }
 
 export async function clearLocalElectionProgress() {
-  const state = await readLocalState();
-  await writeLocalState({
+  await updateLocalState((state) => ({
     ...state,
     electionStatus: "NOT_STARTED",
     votes: [],
     finalResult: null
-  });
+  }));
 }

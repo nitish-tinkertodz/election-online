@@ -3,8 +3,8 @@
 ## Prerequisites
 
 - Node.js 20+
-- Cloudflare account with D1 enabled
-- R2 enabled only if you want real candidate photo storage during development
+- Three machines connected to the same local network
+- One machine designated as the Node.js application host
 - Admin access password for the election dashboard: `12345678`
 
 ## Setup
@@ -18,14 +18,12 @@ npm install
 2. Apply database migrations and seed the baseline election settings.
 
 ```bash
-npm run db:migrate
-npm run db:seed
 ```
 
 3. Start the development server.
 
 ```bash
-npm run dev
+npm run dev -- --hostname 0.0.0.0
 ```
 
 ## Validation Scenarios

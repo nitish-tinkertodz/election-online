@@ -1,10 +1,9 @@
-import { queryAll, queryFirst } from "@/lib/db";
-import { getBindings } from "@/lib/db/platform";
 import {
   getLocalCandidatesState,
   getLocalFinalResult,
   getLocalRolesState,
-  getLocalVotes
+  getLocalVotes,
+  setLocalFinalResult
 } from "@/lib/election/local-store";
 import { rankCandidates } from "@/lib/results/ranking";
 
@@ -80,11 +79,11 @@ function buildResultsSnapshotFromRows(
       });
     }
 
-    if (row.candidate_id && row.candidate_name && row.class_name) {
+    if (row.candidate_id && row.candidate_name) {
       groupedRoles.get(row.role_id)?.candidates.push({
         candidate_id: row.candidate_id,
         candidate_name: row.candidate_name,
-        class_name: row.class_name,
+        class_name: row.class_name ?? "",
         photo_url: row.photo_url ?? "",
         vote_count: Number(row.vote_count ?? 0)
       });
@@ -167,76 +166,37 @@ async function buildLocalLiveSnapshot() {
   );
 }
 
-async function buildDatabaseLiveSnapshot() {
-  const rows = await queryAll<DatabaseResultsRow>(
-    getBindings(),
-    `SELECT
-       roles.id AS role_id,
-       roles.name AS role_name,
-       roles.display_order AS display_order,
-       candidates.id AS candidate_id,
-       candidates.name AS candidate_name,
-       candidates.class_name AS class_name,
-       candidates.photo_url AS photo_url,
-       COUNT(votes.id) AS vote_count
-     FROM roles
-     LEFT JOIN candidates
-       ON candidates.role_id = roles.id
-      AND candidates.status = 'Active'
-     LEFT JOIN votes
-       ON votes.candidate_id = candidates.id
-     WHERE roles.status = 'Active'
-     GROUP BY
-       roles.id,
-       roles.name,
-       roles.display_order,
-       candidates.id,
-       candidates.name,
-       candidates.class_name,
-       candidates.photo_url
-     ORDER BY roles.display_order ASC, candidates.name ASC;`
-  );
-
-  return buildResultsSnapshotFromRows(
-    rows,
-    "OPEN",
-    new Date().toISOString(),
-    null
-  );
-}
-
 export async function buildLiveResultsSnapshot() {
-  if (!getBindings().DB) {
-    return buildLocalLiveSnapshot();
-  }
-
-  return buildDatabaseLiveSnapshot();
+  return buildLocalLiveSnapshot();
 }
 
 export async function getOfficialResultsSnapshot() {
-  if (!getBindings().DB) {
-    const finalResult = await getLocalFinalResult();
-    if (!finalResult) {
-      return null;
-    }
-
-    return JSON.parse(finalResult.result_json) as ResultsSnapshot;
-  }
-
-  const stored = await queryFirst<{ result_json: string }>(
-    getBindings(),
-    `SELECT result_json
-     FROM election_results
-     WHERE election_id = ?
-       AND status = 'FINAL'
-     ORDER BY generated_at DESC
-     LIMIT 1;`,
-    ["default-election"]
-  );
-
-  if (!stored?.result_json) {
+  const finalResult = await getLocalFinalResult();
+  if (!finalResult) {
     return null;
   }
 
-  return JSON.parse(stored.result_json) as ResultsSnapshot;
+  const storedSnapshot = JSON.parse(finalResult.result_json) as ResultsSnapshot;
+  const liveSnapshot = await buildLocalLiveSnapshot();
+
+  if (
+    storedSnapshot.summary.total_votes_cast === liveSnapshot.summary.total_votes_cast
+  ) {
+    return storedSnapshot;
+  }
+
+  const repairedSnapshot: ResultsSnapshot = {
+    ...liveSnapshot,
+    election_status: "CLOSED",
+    closed_at: storedSnapshot.closed_at ?? finalResult.generated_at,
+    generated_at: finalResult.generated_at
+  };
+
+  await setLocalFinalResult({
+    generated_at: finalResult.generated_at,
+    result_json: JSON.stringify(repairedSnapshot),
+    status: "FINAL"
+  });
+
+  return repairedSnapshot;
 }

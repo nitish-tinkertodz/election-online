@@ -1,5 +1,3 @@
-import { execute, queryAll } from "@/lib/db";
-import { getBindings } from "@/lib/db/platform";
 import {
   getLocalCandidatesState,
   setLocalCandidatesState,
@@ -22,21 +20,12 @@ export type CandidateRecord = CandidateInput & {
 };
 
 export async function listCandidates(): Promise<CandidateRecord[]> {
-  if (!getBindings().DB) {
-    const now = new Date().toISOString();
-    return (await getLocalCandidatesState()).map((candidate) => ({
-      ...candidate,
-      created_at: now,
-      updated_at: now
-    }));
-  }
-
-  return queryAll<CandidateRecord>(
-    getBindings(),
-    `SELECT id, role_id, name, class_name, photo_url, status, created_at, updated_at
-     FROM candidates
-     ORDER BY created_at DESC;`
-  );
+  const now = new Date().toISOString();
+  return (await getLocalCandidatesState()).map((candidate) => ({
+    ...candidate,
+    created_at: now,
+    updated_at: now
+  }));
 }
 
 export async function createCandidate(input: CandidateInput) {
@@ -44,37 +33,17 @@ export async function createCandidate(input: CandidateInput) {
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
 
-  if (!getBindings().DB) {
-    const candidates = await getLocalCandidatesState();
-    const nextCandidate: LocalCandidate = {
-      id,
-      role_id: candidate.role_id,
-      name: candidate.name,
-      class_name: candidate.class_name,
-      photo_url: candidate.photo_url || "",
-      status: candidate.status
-    };
+  const candidates = await getLocalCandidatesState();
+  const nextCandidate: LocalCandidate = {
+    id,
+    role_id: candidate.role_id,
+    name: candidate.name,
+    class_name: candidate.class_name,
+    photo_url: candidate.photo_url || "",
+    status: candidate.status
+  };
 
-    await setLocalCandidatesState([...candidates.filter((item) => item.id !== id), nextCandidate]);
-    return { id, ...candidate, created_at: now, updated_at: now };
-  }
-
-  await execute(
-    getBindings(),
-    `INSERT INTO candidates (id, role_id, name, class_name, photo_url, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
-    [
-      id,
-      candidate.role_id,
-      candidate.name,
-      candidate.class_name,
-      candidate.photo_url || "",
-      candidate.status,
-      now,
-      now
-    ]
-  );
-
+  await setLocalCandidatesState([...candidates, nextCandidate]);
   return { id, ...candidate, created_at: now, updated_at: now };
 }
 
@@ -85,9 +54,9 @@ export async function updateCandidate(
   const candidate = candidateSchema.parse(input);
   const now = new Date().toISOString();
 
-  if (!getBindings().DB) {
-    const candidates = await getLocalCandidatesState();
-    const nextCandidates = candidates.map((item) =>
+  const candidates = await getLocalCandidatesState();
+  await setLocalCandidatesState(
+    candidates.map((item) =>
       item.id === candidateId
         ? {
             id: candidateId,
@@ -98,25 +67,7 @@ export async function updateCandidate(
             status: candidate.status
           }
         : item
-    );
-    await setLocalCandidatesState(nextCandidates);
-    return { id: candidateId, ...candidate, updated_at: now };
-  }
-
-  await execute(
-    getBindings(),
-    `UPDATE candidates
-     SET role_id = ?, name = ?, class_name = ?, photo_url = ?, status = ?, updated_at = ?
-     WHERE id = ?;`,
-    [
-      candidate.role_id,
-      candidate.name,
-      candidate.class_name,
-      candidate.photo_url || "",
-      candidate.status,
-      now,
-      candidateId
-    ]
+    )
   );
 
   return { id: candidateId, ...candidate, updated_at: now };
@@ -128,46 +79,20 @@ export async function updateCandidatePhotoUrl(
 ) {
   const now = new Date().toISOString();
 
-  if (!getBindings().DB) {
-    const candidates = await getLocalCandidatesState();
-    const nextCandidates = candidates.map((item) =>
-      item.id === candidateId
-        ? {
-            ...item,
-            photo_url: photoUrl
-          }
-        : item
-    );
-    await setLocalCandidatesState(nextCandidates);
-    return { id: candidateId, photo_url: photoUrl, updated_at: now };
-  }
-
-  await execute(
-    getBindings(),
-    `UPDATE candidates
-     SET photo_url = ?, updated_at = ?
-     WHERE id = ?;`,
-    [photoUrl, now, candidateId]
+  const candidates = await getLocalCandidatesState();
+  await setLocalCandidatesState(
+    candidates.map((item) =>
+      item.id === candidateId ? { ...item, photo_url: photoUrl } : item
+    )
   );
 
   return { id: candidateId, photo_url: photoUrl, updated_at: now };
 }
 
 export async function deleteCandidate(candidateId: string) {
-  if (!getBindings().DB) {
-    const candidates = await getLocalCandidatesState();
-    await setLocalCandidatesState(
-      candidates.filter((candidate) => candidate.id !== candidateId)
-    );
-    return { id: candidateId };
-  }
-
-  await execute(
-    getBindings(),
-    `DELETE FROM candidates
-     WHERE id = ?;`,
-    [candidateId]
+  const candidates = await getLocalCandidatesState();
+  await setLocalCandidatesState(
+    candidates.filter((candidate) => candidate.id !== candidateId)
   );
-
   return { id: candidateId };
 }

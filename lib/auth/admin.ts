@@ -2,8 +2,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 
-import { execute, queryFirst } from "@/lib/db";
-import { getBindings } from "@/lib/db/platform";
 import {
   getLocalAdminSessionLock,
   setLocalAdminSessionLock,
@@ -12,15 +10,10 @@ import {
 import { getRequestClientIp } from "@/lib/network/request-origin";
 
 export const ADMIN_SESSION_COOKIE = "admin_session";
-const ADMIN_SESSION_LOCK_KEY = "admin_session_lock";
 const ADMIN_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_ADMIN_PASSWORD = "12345678";
 
 type AdminSessionLock = LocalAdminSessionLock;
-
-function hasDatabaseBinding() {
-  return Boolean(getBindings().DB);
-}
 
 function getAdminSessionExpiry() {
   return new Date(Date.now() + ADMIN_SESSION_TTL_MS).toISOString();
@@ -31,47 +24,11 @@ function isExpired(expiresAt: string) {
 }
 
 async function readAdminSessionLock() {
-  if (!hasDatabaseBinding()) {
-    return getLocalAdminSessionLock();
-  }
-
-  const setting = await queryFirst<{ value: string }>(
-    getBindings(),
-    "SELECT value FROM settings WHERE key = ?;",
-    [ADMIN_SESSION_LOCK_KEY]
-  );
-
-  if (!setting?.value) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(setting.value) as AdminSessionLock;
-  } catch {
-    return null;
-  }
+  return getLocalAdminSessionLock();
 }
 
 async function writeAdminSessionLock(lock: AdminSessionLock | null) {
-  if (!hasDatabaseBinding()) {
-    await setLocalAdminSessionLock(lock);
-    return;
-  }
-
-  if (!lock) {
-    await execute(
-      getBindings(),
-      "DELETE FROM settings WHERE key = ?;",
-      [ADMIN_SESSION_LOCK_KEY]
-    );
-    return;
-  }
-
-  await execute(
-    getBindings(),
-    "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?);",
-    [ADMIN_SESSION_LOCK_KEY, JSON.stringify(lock)]
-  );
+  await setLocalAdminSessionLock(lock);
 }
 
 async function getActiveAdminSessionLock() {

@@ -14,13 +14,13 @@ Restore administrator control over role and candidate creation, keep the vote pa
 
 **Language/Version**: TypeScript 5.x
 
-**Primary Dependencies**: Next.js App Router, React, Cloudflare Pages/Workers runtime, Cloudflare D1, Zod, Tailwind CSS
+**Primary Dependencies**: Next.js App Router, React, Node.js, Zod, Tailwind CSS
 
-**Storage**: Cloudflare D1 for election data and voting state, browser session cookie for anonymous voting progress tracking
+**Storage**: Atomic JSON file storage and local filesystem candidate photos on the host machine, browser session cookie for anonymous voting progress tracking
 
 **Testing**: Vitest, React Testing Library, Playwright
 
-**Target Platform**: Modern desktop and mobile browsers deployed on Cloudflare
+**Target Platform**: One Node.js host machine serving modern desktop and mobile browsers over the local network
 
 **Project Type**: Web application
 
