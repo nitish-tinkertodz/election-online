@@ -281,7 +281,9 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
       id: roleForm.id || undefined,
       name: String(formData.get("name") ?? ""),
       description: String(formData.get("description") ?? ""),
-      display_order: Number(formData.get("display_order") ?? 1),
+      display_order: roleForm.id
+        ? Number(formData.get("display_order") ?? 1)
+        : 0,
       status: String(formData.get("status") ?? "Active")
     };
 
@@ -511,21 +513,34 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
               />
             </label>
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-ink">Display order</span>
-                <input
-                  name="display_order"
-                  type="number"
-                  value={roleForm.display_order}
-                  onChange={(event) =>
-                    setRoleForm((current) => ({
-                      ...current,
-                      display_order: event.target.value
-                    }))
-                  }
-                  className="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 outline-none focus:border-ember"
-                />
-              </label>
+              {roleForm.id ? (
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-ink">Display order</span>
+                  <input
+                    name="display_order"
+                    type="number"
+                    min="1"
+                    value={roleForm.display_order}
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        display_order: event.target.value
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 outline-none focus:border-ember"
+                    required
+                  />
+                </label>
+              ) : (
+                <div className="rounded-2xl border border-forest/15 bg-forest/5 px-4 py-3">
+                  <p className="text-sm font-semibold text-forest">
+                    Display order is assigned automatically.
+                  </p>
+                  <p className="mt-1 text-sm text-ink/60">
+                    This role will be added after the existing roles.
+                  </p>
+                </div>
+              )}
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-ink">Status</span>
                 <select

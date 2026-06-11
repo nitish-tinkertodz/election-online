@@ -32,11 +32,19 @@ export async function listRoles(): Promise<RoleRecord[]> {
 }
 
 export async function createRole(input: RoleInput) {
-  const role = roleSchema.parse(input);
+  const roles = await getLocalRolesState();
+  const nextDisplayOrder =
+    roles.reduce(
+      (highestOrder, role) => Math.max(highestOrder, role.display_order),
+      0
+    ) + 1;
+  const role = roleSchema.parse({
+    ...input,
+    display_order: nextDisplayOrder
+  });
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
 
-  const roles = await getLocalRolesState();
   const nextRole: LocalRole = {
     id,
     name: role.name,
