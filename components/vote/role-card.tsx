@@ -11,9 +11,15 @@ type RoleCardProps = {
     name: string;
     candidates: Candidate[];
   };
+  selectedCandidateId: string;
+  onSelectCandidate: (candidateId: string) => void;
 };
 
-export function RoleCard({ role }: RoleCardProps) {
+export function RoleCard({
+  role,
+  selectedCandidateId,
+  onSelectCandidate
+}: RoleCardProps) {
   return (
     <section className="rounded-[2rem] border border-ink/10 bg-white/80 p-5 shadow-card backdrop-blur sm:rounded-[2.25rem] sm:p-8">
       <h1 className="pr-4 font-display text-3xl text-ink sm:text-4xl">{role.name}</h1>
@@ -28,6 +34,8 @@ export function RoleCard({ role }: RoleCardProps) {
               type="radio"
               name="candidate_id"
               value={candidate.id}
+              checked={selectedCandidateId === candidate.id}
+              onChange={() => onSelectCandidate(candidate.id)}
               className="peer sr-only"
               required
             />

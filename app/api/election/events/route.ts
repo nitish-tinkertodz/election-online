@@ -5,6 +5,7 @@ import type { ElectionStatus } from "@/lib/election/status";
 export const dynamic = "force-dynamic";
 
 const KEEP_ALIVE_INTERVAL_MS = 15000;
+const STATUS_CHECK_INTERVAL_MS = 1000;
 
 function serializeStatus(status: ElectionStatus) {
   return `event: status\ndata: ${JSON.stringify({ status })}\n\n`;
@@ -26,7 +27,8 @@ export async function GET(request: Request) {
     start(controller) {
       let stopped = false;
       let unsubscribe = () => {};
-      let intervalId: ReturnType<typeof setInterval> | null = null;
+      let keepAliveIntervalId: ReturnType<typeof setInterval> | null = null;
+      let statusIntervalId: ReturnType<typeof setInterval> | null = null;
 
       const stop = () => {
         if (stopped) {
@@ -34,8 +36,11 @@ export async function GET(request: Request) {
         }
 
         stopped = true;
-        if (intervalId) {
-          clearInterval(intervalId);
+        if (keepAliveIntervalId) {
+          clearInterval(keepAliveIntervalId);
+        }
+        if (statusIntervalId) {
+          clearInterval(statusIntervalId);
         }
         unsubscribe();
         request.signal.removeEventListener("abort", handleAbort);
@@ -56,11 +61,14 @@ export async function GET(request: Request) {
       };
 
       unsubscribe = subscribeToElectionStatus(sendStatus);
-      intervalId = setInterval(() => {
+      keepAliveIntervalId = setInterval(() => {
         if (!stopped) {
           controller.enqueue(encoder.encode(": keep-alive\n\n"));
         }
       }, KEEP_ALIVE_INTERVAL_MS);
+      statusIntervalId = setInterval(() => {
+        void getElectionStatus().then(sendStatus).catch(() => {});
+      }, STATUS_CHECK_INTERVAL_MS);
 
       request.signal.addEventListener("abort", handleAbort);
 

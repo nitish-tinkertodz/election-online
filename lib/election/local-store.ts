@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { ElectionStatus } from "@/lib/election/status";
@@ -32,6 +32,11 @@ type LocalStateSnapshot = {
   finalResult: LocalFinalResultSnapshot | null;
   adminSessionLock: LocalAdminSessionLock | null;
 };
+
+export type LocalVotingStateSnapshot = Pick<
+  LocalStateSnapshot,
+  "electionStatus" | "roles" | "candidates"
+>;
 
 export type LocalVoteRecord = {
   session_key: string;
@@ -75,23 +80,74 @@ function getLocalStatePath() {
   return path.join(process.cwd(), ".local-dev", "election-state.json");
 }
 
+const globalLocalStore = globalThis as typeof globalThis & {
+  electionLastKnownState?: LocalStateSnapshot;
+};
+
+const READ_RETRY_DELAYS_MS = [0, 15, 40, 100];
+
 async function ensureLocalStateDir() {
   await mkdir(path.join(process.cwd(), ".local-dev"), { recursive: true });
 }
 
-async function readLocalState() {
-  try {
-    await ensureLocalStateDir();
-    await access(getLocalStatePath());
-    const raw = await readFile(getLocalStatePath(), "utf8");
-    const parsed = JSON.parse(raw) as Partial<LocalStateSnapshot>;
-    return {
-      ...initialState(),
-      ...parsed
-    };
-  } catch {
-    return initialState();
+function normalizeLocalState(parsed: Partial<LocalStateSnapshot>): LocalStateSnapshot {
+  const defaults = initialState();
+
+  return {
+    ...defaults,
+    ...parsed,
+    branding: {
+      ...defaults.branding,
+      ...(parsed.branding ?? {})
+    },
+    roles: Array.isArray(parsed.roles) ? parsed.roles : defaults.roles,
+    candidates: Array.isArray(parsed.candidates)
+      ? parsed.candidates
+      : defaults.candidates,
+    votes: Array.isArray(parsed.votes) ? parsed.votes : defaults.votes
+  };
+}
+
+function wait(delayMs: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+}
+
+async function readLocalState(): Promise<LocalStateSnapshot> {
+  await ensureLocalStateDir();
+  let lastError: unknown;
+
+  for (const delayMs of READ_RETRY_DELAYS_MS) {
+    if (delayMs > 0) {
+      await wait(delayMs);
+    }
+
+    try {
+      const raw = await readFile(getLocalStatePath(), "utf8");
+      const state = normalizeLocalState(
+        JSON.parse(raw) as Partial<LocalStateSnapshot>
+      );
+      globalLocalStore.electionLastKnownState = state;
+      return state;
+    } catch (error) {
+      lastError = error;
+    }
   }
+
+  if (globalLocalStore.electionLastKnownState) {
+    return globalLocalStore.electionLastKnownState;
+  }
+
+  if (
+    lastError instanceof Error &&
+    "code" in lastError &&
+    lastError.code === "ENOENT"
+  ) {
+    const state = initialState();
+    globalLocalStore.electionLastKnownState = state;
+    return state;
+  }
+
+  throw lastError;
 }
 
 async function writeLocalState(nextState: LocalStateSnapshot) {
@@ -100,6 +156,7 @@ async function writeLocalState(nextState: LocalStateSnapshot) {
   const temporaryPath = `${statePath}.${process.pid}.tmp`;
   await writeFile(temporaryPath, JSON.stringify(nextState, null, 2), "utf8");
   await rename(temporaryPath, statePath);
+  globalLocalStore.electionLastKnownState = nextState;
 }
 
 let mutationQueue = Promise.resolve();
@@ -121,6 +178,18 @@ export async function getLocalElectionStatus() {
   return state.electionStatus;
 }
 
+export async function getLocalVotingState(): Promise<LocalVotingStateSnapshot> {
+  const state = await readLocalState();
+
+  return {
+    electionStatus: state.electionStatus,
+    roles: [...state.roles].sort(
+      (left, right) => left.display_order - right.display_order
+    ),
+    candidates: [...state.candidates]
+  };
+}
+
 export async function setLocalElectionStatus(status: ElectionStatus) {
   await updateLocalState((state) => ({
     ...state,
@@ -132,6 +201,16 @@ export async function appendLocalVote(vote: LocalVoteRecord) {
   await updateLocalState((state) => {
     if (state.electionStatus !== "OPEN") {
       throw new Error("Voting is not open.");
+    }
+
+    if (
+      state.votes.some(
+        (existingVote) =>
+          existingVote.session_key === vote.session_key &&
+          existingVote.role_id === vote.role_id
+      )
+    ) {
+      throw new Error("This role has already been completed in the current browser session.");
     }
 
     return {

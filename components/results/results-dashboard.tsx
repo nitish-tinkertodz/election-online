@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import { RoleResultsCard } from "@/components/results/role-results-card";
 import { ResultsBanner } from "@/components/results/results-banner";
+import { SchoolBrand } from "@/components/shared/school-brand";
 import type { ResultsRole, ResultsSnapshot } from "@/lib/results/live-results";
 
 type ResultsDashboardData = {
@@ -19,6 +21,8 @@ type ResultsDashboardData = {
 
 type ResultsDashboardProps = {
   initialData: ResultsDashboardData;
+  schoolName: string;
+  logoUrl?: string;
 };
 
 function formatTimestamp(value: string | null) {
@@ -46,7 +50,11 @@ function mapSnapshotToData(
   };
 }
 
-export function ResultsDashboard({ initialData }: ResultsDashboardProps) {
+export function ResultsDashboard({
+  initialData,
+  schoolName,
+  logoUrl = ""
+}: ResultsDashboardProps) {
   const [data, setData] = useState(initialData);
   const [error, setError] = useState("");
 
@@ -87,8 +95,17 @@ export function ResultsDashboard({ initialData }: ResultsDashboardProps) {
   }, [data.electionStatus]);
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-16">
-      <div className="space-y-6">
+    <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <SchoolBrand schoolName={schoolName} logoUrl={logoUrl} />
+        <Link
+          href="/admin"
+          className="rounded-full border border-ink/15 bg-white/80 px-5 py-3 text-sm font-semibold text-ink shadow-sm transition hover:border-forest hover:text-forest"
+        >
+          Back to admin
+        </Link>
+      </div>
+      <div className="mt-8 space-y-6">
         <ResultsBanner
           tone={data.mode}
           title={
@@ -130,7 +147,7 @@ export function ResultsDashboard({ initialData }: ResultsDashboardProps) {
           </div>
           <div className="rounded-[1.6rem] border border-ink/10 bg-white/80 p-5 shadow-card backdrop-blur">
             <p className="text-xs uppercase tracking-[0.24em] text-ink/48">
-              Total votes cast
+              Voters participated
             </p>
             <p className="mt-3 font-display text-3xl text-ink">
               {data.summary.total_votes_cast}

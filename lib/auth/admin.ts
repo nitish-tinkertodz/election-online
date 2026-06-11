@@ -8,6 +8,7 @@ import {
   type LocalAdminSessionLock
 } from "@/lib/election/local-store";
 import { getRequestClientIp } from "@/lib/network/request-origin";
+import { useSecureCookies } from "@/lib/network/cookie-options";
 
 export const ADMIN_SESSION_COOKIE = "admin_session";
 const ADMIN_SESSION_TTL_MS = 10 * 60 * 1000;
@@ -100,7 +101,7 @@ export async function setAdminSession(requestHeaders?: Headers) {
   cookieStore.set(ADMIN_SESSION_COOKIE, sessionToken, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies(),
     path: "/"
   });
 }

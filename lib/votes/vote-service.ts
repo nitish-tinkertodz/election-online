@@ -1,9 +1,9 @@
 import {
   appendLocalVote,
-  getLocalCandidatesState,
-  getLocalRolesState
+  getLocalVotes,
+  getLocalVotingState,
+  type LocalVotingStateSnapshot
 } from "@/lib/election/local-store";
-import { getElectionStatus } from "@/lib/election/election-service";
 import { serializeCompletedRoles } from "@/lib/election/session";
 import { voteSubmissionSchema } from "@/lib/validation";
 
@@ -22,11 +22,11 @@ type BallotRole = {
   }[];
 };
 
-export async function getBallotRoles() {
-  const roles = (await getLocalRolesState()).filter(
+function buildBallotRoles(state: LocalVotingStateSnapshot): BallotRole[] {
+  const roles = state.roles.filter(
     (role) => role.status === "Active"
   );
-  const candidates = (await getLocalCandidatesState()).filter(
+  const candidates = state.candidates.filter(
     (candidate) => candidate.status === "Active"
   );
 
@@ -36,9 +36,14 @@ export async function getBallotRoles() {
   }));
 }
 
+export async function getBallotRoles() {
+  return buildBallotRoles(await getLocalVotingState());
+}
+
 export async function getVotingPortalState(sessionKey: string) {
-  const electionStatus = await getElectionStatus();
-  const roles = await getBallotRoles();
+  const state = await getLocalVotingState();
+  const electionStatus = state.electionStatus;
+  const roles = buildBallotRoles(state);
   const completedRoleIds = await getCompletedRoleIds(sessionKey);
   const nextRole =
     roles.find((role) => !completedRoleIds.includes(role.id)) ?? null;
@@ -58,18 +63,28 @@ export async function getVotingPortalState(sessionKey: string) {
 }
 
 export async function getCompletedRoleIds(sessionKey: string): Promise<string[]> {
-  void sessionKey;
-  return [];
+  if (!sessionKey || sessionKey === "pending-session") {
+    return [];
+  }
+
+  const votes = await getLocalVotes();
+  return [
+    ...new Set(
+      votes
+        .filter((vote) => vote.session_key === sessionKey)
+        .map((vote) => vote.role_id)
+    )
+  ];
 }
 
 export async function submitRoleVote(
   sessionKey: string,
-  payload: unknown,
-  completedRoleIdsFromCookie: string[]
+  payload: unknown
 ) {
   const parsed = voteSubmissionSchema.parse(payload);
-  const electionStatus = await getElectionStatus();
-  const roles = await getBallotRoles();
+  const state = await getLocalVotingState();
+  const electionStatus = state.electionStatus;
+  const roles = buildBallotRoles(state);
 
   if (!roles.some((role) => role.candidates.length > 0)) {
     throw new Error(
@@ -95,7 +110,7 @@ export async function submitRoleVote(
     throw new Error("Candidate is invalid, inactive, or does not belong to the role.");
   }
 
-  const completedRoleIds = completedRoleIdsFromCookie;
+  const completedRoleIds = await getCompletedRoleIds(sessionKey);
 
   if (completedRoleIds.includes(role.id)) {
     throw new Error("This role has already been completed in the current browser session.");

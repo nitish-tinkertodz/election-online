@@ -24,7 +24,7 @@ export const candidateSchema = z.object({
 
 export const brandingSchema = z.object({
   school_name: z.string().trim().min(1).max(140),
-  school_logo_url: z.string().url().optional().or(z.literal(""))
+  school_logo_url: z.string().trim().max(500)
 });
 
 export const voteSubmissionSchema = z.object({

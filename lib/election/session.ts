@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 
+import { useSecureCookies } from "@/lib/network/cookie-options";
+
 export const VOTE_SESSION_COOKIE = "vote_session_key";
 export const COMPLETED_ROLES_COOKIE = "completed_role_ids";
 
@@ -20,7 +22,7 @@ export async function getOrCreateVoteSessionKey() {
   cookieStore.set(VOTE_SESSION_COOKIE, sessionKey, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies(),
     path: "/"
   });
 

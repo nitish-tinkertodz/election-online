@@ -408,9 +408,6 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
             <p className="mt-2 font-display text-3xl text-ink">{status}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full border border-ember/15 bg-ember/10 px-4 py-2 text-sm font-semibold text-ember">
-              Admin setup enabled while not open
-            </div>
             {status === "OPEN" ? (
               <>
                 <div className="rounded-full border border-forest/15 bg-forest/10 px-4 py-2 text-sm font-semibold text-forest">
@@ -787,7 +784,7 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
                   Role-by-role results
                 </h2>
                 <p className="mt-2 text-sm text-ink/68">
-                  Total votes cast: {officialResults.summary.total_votes_cast}
+                  Voters participated: {officialResults.summary.total_votes_cast}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -852,10 +849,18 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
                         {role.candidates.map((candidate) => (
                           <div
                             key={candidate.candidate_id}
-                            className="rounded-[1.25rem] border border-ink/10 bg-white/80 p-4"
+                            className={`rounded-[1.5rem] border ${
+                              candidate.is_winner
+                                ? "border-forest/30 bg-gradient-to-br from-forest/12 via-white to-ember/10 p-6 shadow-card md:col-span-2"
+                                : "border-ink/10 bg-white/80 p-4"
+                            }`}
                           >
                             <div className="flex items-start gap-4">
-                              <div className="flex aspect-square w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1rem] border border-dashed border-ink/15 bg-ballot-glow text-[10px] uppercase tracking-[0.22em] text-ink/45">
+                              <div className={`flex aspect-square shrink-0 items-center justify-center overflow-hidden border border-dashed border-ink/15 bg-ballot-glow text-[10px] uppercase tracking-[0.22em] text-ink/45 ${
+                                candidate.is_winner
+                                  ? "w-28 rounded-[1.35rem] sm:w-36"
+                                  : "w-20 rounded-[1rem]"
+                              }`}>
                                 {candidate.photo_url ? (
                                   <img
                                     src={candidate.photo_url}
@@ -868,7 +873,11 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <h4 className="font-display text-xl text-ink">
+                                  <h4 className={`font-display text-ink ${
+                                    candidate.is_winner
+                                      ? "text-3xl sm:text-4xl"
+                                      : "text-xl"
+                                  }`}>
                                     {candidate.candidate_name}
                                   </h4>
                                   {candidate.is_winner ? (
@@ -882,7 +891,11 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
                                 </p>
                                 <div className="mt-3 flex items-center justify-between text-sm text-ink/68">
                                   <span>Vote count</span>
-                                  <span className="font-semibold text-ink">
+                                  <span className={`font-semibold ${
+                                    candidate.is_winner
+                                      ? "font-display text-3xl text-forest"
+                                      : "text-ink"
+                                  }`}>
                                     {candidate.vote_count}
                                   </span>
                                 </div>

@@ -35,14 +35,25 @@ export function RoleResultsCard({
       </div>
 
       <div className="mt-6 space-y-3">
-        {role.candidates.map((candidate) => (
+        {role.candidates.map((candidate) => {
+          const isFeatured = candidate.is_winner;
+
+          return (
           <div
             key={candidate.candidate_id}
-            className="rounded-[1.5rem] border border-ink/10 bg-cream/70 p-4"
+            className={`rounded-[1.75rem] border transition ${
+              isFeatured
+                ? "border-forest/30 bg-gradient-to-br from-forest/12 via-white to-ember/10 p-6 shadow-card"
+                : "border-ink/10 bg-cream/70 p-4"
+            }`}
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex min-w-0 flex-1 gap-4">
-                <div className="flex aspect-square w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.25rem] border border-dashed border-ink/15 bg-white text-[10px] uppercase tracking-[0.22em] text-ink/45">
+                <div className={`flex aspect-square shrink-0 items-center justify-center overflow-hidden border border-dashed border-ink/15 bg-white text-[10px] uppercase tracking-[0.22em] text-ink/45 ${
+                  isFeatured
+                    ? "w-28 rounded-[1.5rem] sm:w-36"
+                    : "w-20 rounded-[1.25rem]"
+                }`}>
                   {candidate.photo_url ? (
                     <img
                       src={candidate.photo_url}
@@ -55,11 +66,13 @@ export function RoleResultsCard({
                 </div>
                 <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display text-2xl text-ink">
+                  <h3 className={`font-display text-ink ${
+                    isFeatured ? "text-3xl sm:text-4xl" : "text-2xl"
+                  }`}>
                     {candidate.candidate_name}
                   </h3>
                   {candidate.is_winner ? (
-                    <span className="rounded-full bg-forest/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-forest">
+                    <span className="rounded-full border border-forest/20 bg-forest/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-forest">
                       {mode === "official" ? "Winner" : "Leading"}
                     </span>
                   ) : null}
@@ -67,21 +80,30 @@ export function RoleResultsCard({
                 <p className="mt-2 text-sm text-ink/68">{candidate.class_name}</p>
               </div>
               </div>
-              <div className="text-right">
+              <div className={`text-right ${
+                isFeatured
+                  ? "rounded-2xl border border-forest/15 bg-white/80 px-5 py-4"
+                  : ""
+              }`}>
                 <p className="text-xs uppercase tracking-[0.24em] text-ink/48">
-                  Rank
+                  {isFeatured ? "Votes" : "Rank"}
                 </p>
-                <p className="mt-2 font-display text-2xl text-ink">
-                  #{candidate.rank}
+                <p className={`mt-2 font-display text-ink ${
+                  isFeatured ? "text-4xl text-forest" : "text-2xl"
+                }`}>
+                  {isFeatured ? candidate.vote_count : `#${candidate.rank}`}
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-between text-sm text-ink/68">
+            {!isFeatured ? (
+              <div className="mt-4 flex items-center justify-between text-sm text-ink/68">
               <span>Vote count</span>
               <span className="font-semibold text-ink">{candidate.vote_count}</span>
-            </div>
+              </div>
+            ) : null}
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

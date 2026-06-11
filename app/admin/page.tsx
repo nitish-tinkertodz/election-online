@@ -6,6 +6,9 @@ import {
 } from "@/lib/candidates/candidate-repository";
 import { listRoles, type RoleRecord } from "@/lib/roles/role-repository";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { BrandingForm } from "@/components/admin/branding-form";
+import { SchoolBrand } from "@/components/shared/school-brand";
+import { getLocalBranding } from "@/lib/election/local-store";
 
 type AdminPageProps = {
   searchParams?: Promise<{
@@ -18,11 +21,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = (await searchParams) ?? {};
   const authenticated = await isAdminAuthenticated();
   const status = authenticated ? await getElectionStatus().catch(() => "NOT_STARTED") : "NOT_STARTED";
+  const branding = await getLocalBranding();
 
   if (!authenticated) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-6 py-16">
-        <section className="w-full max-w-xl rounded-[2rem] border border-ink/10 bg-white/80 p-10 shadow-card backdrop-blur">
+      <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-8">
+        <SchoolBrand
+          schoolName={branding.school_name}
+          logoUrl={branding.school_logo_url}
+        />
+        <section className="mx-auto mt-16 w-full max-w-xl rounded-[2rem] border border-ink/10 bg-white/80 p-10 shadow-card backdrop-blur">
           <p className="font-body text-sm uppercase tracking-[0.3em] text-ember">
             Admin Access
           </p>
@@ -80,9 +88,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   ]);
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-16">
+    <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-8">
+      <SchoolBrand
+        schoolName={branding.school_name}
+        logoUrl={branding.school_logo_url}
+      />
       <section className="mb-8">
-        <div className="rounded-[2rem] border border-ink/10 bg-white/80 p-10 shadow-card backdrop-blur">
+        <div className="mt-8 rounded-[2rem] border border-ink/10 bg-white/80 p-10 shadow-card backdrop-blur">
           <p className="font-body text-sm uppercase tracking-[0.3em] text-ember">
             Admin Dashboard
           </p>
@@ -96,12 +108,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <span className="rounded-full border border-forest/15 bg-forest/10 px-4 py-2 text-sm font-semibold text-forest">
               Election status: {status}
             </span>
-            <span className="rounded-full border border-ember/15 bg-ember/10 px-4 py-2 text-sm font-semibold text-ember">
-              Shared password protected
-            </span>
           </div>
         </div>
       </section>
+
+      <div className="mb-6">
+        <BrandingForm
+          schoolName={branding.school_name}
+          logoUrl={branding.school_logo_url}
+        />
+      </div>
 
       <AdminDashboard
         roles={roles}

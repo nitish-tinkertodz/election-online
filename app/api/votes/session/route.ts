@@ -4,6 +4,7 @@ import {
   COMPLETED_ROLES_COOKIE,
   VOTE_SESSION_COOKIE
 } from "@/lib/election/session";
+import { useSecureCookies } from "@/lib/network/cookie-options";
 
 export async function DELETE() {
   const response = NextResponse.json({
@@ -13,14 +14,14 @@ export async function DELETE() {
   response.cookies.set(COMPLETED_ROLES_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies(),
     path: "/",
     expires: new Date(0)
   });
   response.cookies.set(VOTE_SESSION_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureCookies(),
     path: "/",
     expires: new Date(0)
   });

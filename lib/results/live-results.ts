@@ -49,6 +49,7 @@ type DatabaseResultsRow = {
 
 function buildResultsSnapshotFromRows(
   rows: DatabaseResultsRow[],
+  totalVoters: number,
   electionStatus: "OPEN" | "CLOSED",
   generatedAt: string,
   closedAt: string | null
@@ -113,7 +114,7 @@ function buildResultsSnapshotFromRows(
     closed_at: closedAt,
     generated_at: generatedAt,
     summary: {
-      total_votes_cast: roles.reduce((sum, role) => sum + role.total_votes, 0)
+      total_votes_cast: totalVoters
     },
     roles
   };
@@ -160,6 +161,7 @@ async function buildLocalLiveSnapshot() {
 
   return buildResultsSnapshotFromRows(
     rows,
+    new Set(votes.map((vote) => vote.session_key)).size,
     "OPEN",
     new Date().toISOString(),
     null

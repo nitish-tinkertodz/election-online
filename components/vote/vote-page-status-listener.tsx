@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 import type { ElectionStatus } from "@/lib/election/status";
 
@@ -12,18 +11,20 @@ type VotePageStatusListenerProps = {
 export function VotePageStatusListener({
   currentStatus
 }: VotePageStatusListenerProps) {
-  const router = useRouter();
-
   useEffect(() => {
     const events = new EventSource(
       `/api/election/events?status=${encodeURIComponent(currentStatus)}`
     );
 
     const handleStatus = (event: MessageEvent<string>) => {
-      const payload = JSON.parse(event.data) as { status?: ElectionStatus };
-      if (payload.status && payload.status !== currentStatus) {
-        events.close();
-        router.refresh();
+      try {
+        const payload = JSON.parse(event.data) as { status?: ElectionStatus };
+        if (payload.status && payload.status !== currentStatus) {
+          events.close();
+          window.location.reload();
+        }
+      } catch {
+        // Ignore malformed events and let EventSource continue listening.
       }
     };
 
@@ -33,7 +34,7 @@ export function VotePageStatusListener({
       events.removeEventListener("status", handleStatus);
       events.close();
     };
-  }, [currentStatus, router]);
+  }, [currentStatus]);
 
   return null;
 }
