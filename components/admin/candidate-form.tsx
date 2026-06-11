@@ -21,7 +21,9 @@ export function CandidateForm({
           />
         </label>
         <label className="block">
-          <span className="mb-2 block text-sm font-semibold text-ink">Class details</span>
+          <span className="mb-2 block text-sm font-semibold text-ink">
+            Class details <span className="font-normal text-ink/55">(optional)</span>
+          </span>
           <input
             defaultValue={previewClassName}
             className="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 outline-none focus:border-ember"

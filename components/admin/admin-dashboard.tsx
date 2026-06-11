@@ -627,7 +627,9 @@ export function AdminDashboard({ roles, candidates, status }: AdminDashboardProp
                 />
               </label>
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-ink">Class</span>
+                <span className="mb-2 block text-sm font-semibold text-ink">
+                  Class <span className="font-normal text-ink/55">(optional)</span>
+                </span>
                 <input
                   name="class_name"
                   value={candidateForm.class_name}

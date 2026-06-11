@@ -16,7 +16,7 @@ export const roleSchema = z.object({
 
 export const candidateSchema = z.object({
   name: z.string().trim().min(1).max(120),
-  class_name: z.string().trim().min(1).max(40),
+  class_name: z.string().trim().max(40).optional().default(""),
   role_id: z.string().trim().min(1),
   photo_url: z.string().trim().max(500).optional().or(z.literal("")),
   status: candidateStatusSchema
